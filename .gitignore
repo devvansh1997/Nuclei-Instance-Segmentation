@@ -205,3 +205,26 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# -----------------------------------------------------------------------
+# Project-specific ignores
+# -----------------------------------------------------------------------
+
+# Model weights (large binary files — download separately, do not commit)
+weights/
+*.pt
+*.pth
+*.safetensors
+
+# Training outputs (checkpoints, logs, visualizations — generated at runtime)
+outputs/
+
+# Dataset (stored outside repo at Medical Image Computing/datasets/)
+datasets/
+
+# Run-specific logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

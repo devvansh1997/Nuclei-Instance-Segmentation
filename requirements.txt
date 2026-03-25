@@ -1,0 +1,55 @@
+# =============================================================================
+# Requirements — MobileSAM + LoRA Nuclei Instance Segmentation
+# =============================================================================
+#
+# ENVIRONMENT NOTES:
+#   Local  : RTX 5070 12GB, Windows 11, CUDA 12.8, fp16
+#   HPC    : A100 80GB, CUDA (check cluster), bf16
+#   Venv   : C:\Users\devan\python_envs\work_env\Scripts\python.exe
+#
+# INSTALL ORDER MATTERS:
+#   1. PyTorch (already installed in work_env — skip if using that venv)
+#   2. pip install -r requirements.txt
+#
+# For HPC, install PyTorch first with the correct CUDA index:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   (adjust cu121 to match cluster CUDA version)
+# =============================================================================
+
+# -----------------------------------------------------------------------
+# Core deep learning — already in work_env (listed for HPC reference)
+# -----------------------------------------------------------------------
+# torch==2.10.0          # installed: 2.10.0+cu128
+# torchvision==0.25.0    # installed: 0.25.0+cu128 — must match torch CUDA build
+# numpy==2.3.5           # installed — NOTE: numpy 2.x removed np.bool/np.int/np.float
+# pillow==12.0.0         # installed
+# scipy==1.17.1          # installed
+# scikit-learn==1.8.0    # installed
+# matplotlib==3.10.8     # installed
+# tqdm==4.67.3           # installed
+# timm==0.9.16           # installed — MobileSAM depends on this; do not upgrade blindly
+# PyYAML==6.0.3          # installed
+
+# -----------------------------------------------------------------------
+# Needs installation (not in work_env)
+# -----------------------------------------------------------------------
+
+# MobileSAM — lightweight SAM variant using TinyViT image encoder
+# Compatible with timm==0.9.16 and torch>=1.7
+mobile-sam==1.0.0
+
+# TIFF file reading — NuInsSeg masks are 16-bit TIFF (uint16 instance IDs)
+# Do NOT use PIL for these — it silently clips uint16 to uint8
+tifffile>=2023.7.10
+
+# scikit-image — used for AJI/PQ metric computation and morphological ops
+# Version >= 0.22 required for numpy 2.x compatibility
+scikit-image>=0.22.0
+
+# Albumentations — synchronized image+mask augmentation pipeline
+# Version >= 1.4 required for numpy 2.x compatibility
+albumentations>=1.4.0
+
+# OpenCV (headless — no GUI deps, safe for HPC)
+# Used for contour detection and image preprocessing
+opencv-python-headless>=4.8.0

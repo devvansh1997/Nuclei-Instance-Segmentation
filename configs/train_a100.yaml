@@ -1,0 +1,87 @@
+# =============================================================================
+# train_a100.yaml — Full training run (A100 80GB, HPC cluster)
+#
+# Purpose : Full 5-fold cross-validation on the complete NuInsSeg dataset.
+# Usage   : python cross_validate.py --config configs/train_a100.yaml
+#
+# BEFORE RUNNING ON HPC:
+#   1. Update data.root to the cluster path where NuInsSeg is stored
+#   2. Update model.checkpoint to the cluster path for mobile_sam.pt
+#   3. Confirm CUDA version and adjust torch install if needed
+#   4. Set num_workers to an appropriate value for the cluster (typically 4-8)
+# =============================================================================
+
+# -----------------------------------------------------------------------
+# Debug / logging controls
+# -----------------------------------------------------------------------
+debug:
+  enabled: false         # Use full dataset
+  max_samples: null      # No cap
+  log_level: "INFO"      # INFO for clean run logs
+  log_to_file: true
+  save_every_n_epochs: 5 # Save checkpoint every 5 epochs
+
+# -----------------------------------------------------------------------
+# Data
+# -----------------------------------------------------------------------
+data:
+  # TODO: Update this path for your HPC cluster storage
+  root: "/path/to/datasets/NuInsSeg"
+  n_folds: 5
+  seed: 42
+  image_size: 1024       # SAM input resolution (do not change)
+  num_workers: 4         # Increase based on cluster CPU allocation
+
+# -----------------------------------------------------------------------
+# Model
+# -----------------------------------------------------------------------
+model:
+  type: "mobile_sam"
+  # TODO: Update this path for your HPC cluster storage
+  checkpoint: "weights/mobile_sam.pt"
+
+  # LoRA configuration — keep in sync with debug.yaml unless experimenting
+  lora_rank: 4
+  lora_alpha: 4
+  lora_dropout: 0.1
+
+  lora_targets:
+    - "qkv"
+    - "proj"
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "out_proj"
+
+# -----------------------------------------------------------------------
+# Training
+# -----------------------------------------------------------------------
+training:
+  epochs: 50
+  batch_size: 8          # A100 80GB can comfortably handle bs=8 at 1024x1024
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  lr_scheduler: "cosine"
+  warmup_epochs: 5       # 5-epoch linear warmup before cosine decay
+  mixed_precision: "bf16" # bf16 preferred on A100 (more stable than fp16)
+  grad_clip: 1.0
+  num_pos_points: 1
+  num_neg_points: 1
+
+# -----------------------------------------------------------------------
+# Evaluation / Inference
+# -----------------------------------------------------------------------
+evaluation:
+  iou_threshold: 0.5
+  points_per_side: 32    # Denser grid for thorough nuclei detection at inference
+  pred_iou_thresh: 0.75
+  stability_score_thresh: 0.85
+  box_nms_thresh: 0.7
+  min_mask_region_area: 100
+
+# -----------------------------------------------------------------------
+# Output
+# -----------------------------------------------------------------------
+output:
+  save_dir: "outputs/train_a100"
+  num_vis_samples: 8     # More visual comparisons for the final report

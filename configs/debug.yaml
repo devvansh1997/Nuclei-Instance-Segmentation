@@ -1,0 +1,89 @@
+# =============================================================================
+# debug.yaml — Local debug runs (RTX 5070, Windows 11)
+#
+# Purpose : Verify the full pipeline end-to-end quickly.
+#           Caps dataset size, uses minimal epochs, verbose logging.
+# Usage   : python cross_validate.py --config configs/debug.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------
+# Debug / logging controls
+# -----------------------------------------------------------------------
+debug:
+  enabled: true          # Caps dataset to max_samples images total
+  max_samples: 20        # Number of images to use when enabled=true
+  log_level: "DEBUG"     # DEBUG | INFO | WARNING
+  log_to_file: true      # Also write logs to outputs/<run_name>/run.log
+  save_every_n_epochs: 1 # Checkpoint frequency (every epoch for debug)
+
+# -----------------------------------------------------------------------
+# Data
+# -----------------------------------------------------------------------
+data:
+  root: "C:/Users/devan/Medical Image Computing/datasets/NuInsSeg"
+  n_folds: 5             # 5-fold cross-validation
+  seed: 42               # Fixed seed for reproducible fold splits
+  image_size: 1024       # SAM input resolution (do not change)
+  # num_workers: 0 on Windows to avoid DataLoader multiprocessing issues
+  num_workers: 0
+
+# -----------------------------------------------------------------------
+# Model
+# -----------------------------------------------------------------------
+model:
+  type: "mobile_sam"
+  # Download from: https://github.com/ChaoningZhang/MobileSAM
+  # Place at: weights/mobile_sam.pt
+  checkpoint: "weights/mobile_sam.pt"
+
+  # LoRA configuration
+  lora_rank: 4           # Low-rank dimension r
+  lora_alpha: 4          # Scaling factor alpha (effective scale = alpha/rank = 1.0)
+  lora_dropout: 0.1      # Dropout applied inside LoRA branch
+
+  # Which Linear layer names to inject LoRA into
+  # TinyViT image encoder attention : qkv, proj
+  # Mask decoder cross-attention     : q_proj, k_proj, v_proj, out_proj
+  lora_targets:
+    - "qkv"
+    - "proj"
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "out_proj"
+
+# -----------------------------------------------------------------------
+# Training
+# -----------------------------------------------------------------------
+training:
+  epochs: 3              # Minimal epochs — just enough to verify gradients flow
+  batch_size: 2          # Small batch for 12 GB VRAM debug run
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  lr_scheduler: "cosine" # cosine | step | none
+  warmup_epochs: 0       # No warmup for quick debug
+  mixed_precision: "fp16" # fp16 for RTX 5070 | bf16 for A100
+  grad_clip: 1.0         # Max gradient norm (0 = disabled)
+  # Number of point prompts sampled per image per training step
+  # (1 positive centroid + 1 negative background point = 2 points total)
+  num_pos_points: 1
+  num_neg_points: 1
+
+# -----------------------------------------------------------------------
+# Evaluation / Inference
+# -----------------------------------------------------------------------
+evaluation:
+  iou_threshold: 0.5       # IoU threshold for TP matching in PQ/AJI
+  # SAM Automatic Mask Generator settings (used at inference time)
+  points_per_side: 16      # Grid density — lower = faster, fewer detections (debug)
+  pred_iou_thresh: 0.75    # Discard masks with predicted IoU below this
+  stability_score_thresh: 0.85
+  box_nms_thresh: 0.7      # NMS threshold for removing duplicate masks
+  min_mask_region_area: 50 # Discard masks smaller than this (pixels)
+
+# -----------------------------------------------------------------------
+# Output
+# -----------------------------------------------------------------------
+output:
+  save_dir: "outputs/debug"  # All checkpoints, logs, and visualizations go here
+  num_vis_samples: 4         # Number of images to visualize per fold
