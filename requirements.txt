@@ -35,8 +35,10 @@
 # -----------------------------------------------------------------------
 
 # MobileSAM — lightweight SAM variant using TinyViT image encoder
+# NOT on PyPI — must install from GitHub:
+#   pip install git+https://github.com/ChaoningZhang/MobileSAM.git
 # Compatible with timm==0.9.16 and torch>=1.7
-mobile-sam==1.0.0
+# Do NOT run `pip install mobile-sam` — that package does not exist on PyPI
 
 # TIFF file reading — NuInsSeg masks are 16-bit TIFF (uint16 instance IDs)
 # Do NOT use PIL for these — it silently clips uint16 to uint8

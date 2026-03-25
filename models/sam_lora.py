@@ -164,7 +164,7 @@ class MobileSAMLoRA(nn.Module):
 
         Returns
         -------
-        image_tensor  : (1, 3, 1024, 1024) float32 tensor (on CPU).
+        image_tensor  : (1, 3, 1024, 1024) float32 tensor (on model device).
         original_size : (H, W)  original spatial dimensions (for postprocessing).
         input_size    : (H', W') after ResizeLongestSide (before padding).
         """
@@ -174,11 +174,15 @@ class MobileSAMLoRA(nn.Module):
         image_resized = self.resize_transform.apply_image(image_np)   # (H', W', 3)
         input_size    = tuple(image_resized.shape[:2])                 # (H', W')
 
-        # To tensor → preprocess (normalise + pad)
+        # To tensor → move to model device → preprocess (normalise + pad)
+        # pixel_mean and pixel_std are registered buffers on the model's device,
+        # so image_tensor must be on the same device before calling preprocess().
+        model_device = next(self.sam.parameters()).device
         image_tensor = (
             torch.as_tensor(image_resized, dtype=torch.float32)
             .permute(2, 0, 1)        # (3, H', W')
             .unsqueeze(0)            # (1, 3, H', W')
+            .to(model_device)
         )
         image_tensor = self.sam.preprocess(image_tensor)               # (1, 3, 1024, 1024)
 
@@ -225,20 +229,31 @@ class MobileSAMLoRA(nn.Module):
         point_labels:  torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Single forward pass for training.
+        Single-image forward pass for training.
+
+        IMPORTANT — SAM's mask decoder is NOT designed for true multi-image
+        batches.  Its internal repeat_interleave doubles the batch dimension
+        when N_prompts > 1, causing shape mismatches.  Always call with
+        batch size = 1 (one image at a time).  To train on a batch of B
+        images, call this method B times and accumulate gradients.
 
         Parameters
         ----------
-        image_tensor  : (B, 3, 1024, 1024) float32 — preprocessed image batch.
-        point_coords  : (B, N, 2) float32 — point prompts in SAM input space.
+        image_tensor  : (1, 3, 1024, 1024) float32 — single preprocessed image.
+        point_coords  : (1, N, 2) float32 — point prompts in SAM input space.
                         SAM convention: (x, y) = (col, row).
-        point_labels  : (B, N) int64 — 1 = positive, 0 = negative.
+        point_labels  : (1, N) int64 — 1 = positive, 0 = negative.
 
         Returns
         -------
-        low_res_masks    : (B, 1, 256, 256) float32 — raw logits from decoder.
-        iou_predictions  : (B, 1) float32 — predicted mask IoU scores.
+        low_res_masks    : (1, 1, 256, 256) float32 — raw logits from decoder.
+        iou_predictions  : (1, 1) float32 — predicted mask IoU scores.
         """
+        assert image_tensor.shape[0] == 1, (
+            "MobileSAM forward() expects batch_size=1. "
+            "Loop over images and accumulate gradients in the training loop."
+        )
+
         # --- Image encoding -----------------------------------------------
         image_embeddings = self.sam.image_encoder(image_tensor)
         logger.debug("image_embeddings shape: %s", tuple(image_embeddings.shape))
@@ -252,11 +267,11 @@ class MobileSAMLoRA(nn.Module):
 
         # --- Mask decoding ------------------------------------------------
         low_res_masks, iou_predictions = self.sam.mask_decoder(
-            image_embeddings       = image_embeddings,
-            image_pe               = self.sam.prompt_encoder.get_dense_pe(),
+            image_embeddings         = image_embeddings,
+            image_pe                 = self.sam.prompt_encoder.get_dense_pe(),
             sparse_prompt_embeddings = sparse_embeddings,
             dense_prompt_embeddings  = dense_embeddings,
-            multimask_output       = False,   # Single best mask per prompt
+            multimask_output         = False,
         )
 
         logger.debug(
