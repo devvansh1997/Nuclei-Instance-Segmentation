@@ -73,11 +73,26 @@ training:
 # -----------------------------------------------------------------------
 evaluation:
   iou_threshold: 0.5
-  points_per_side: 32    # Denser grid for thorough nuclei detection at inference
+
+  # --- Inference mode ---
+  # "watershed" (default): HED foreground → distance-transform watershed → SAM centroid prompting
+  #   Consistent with training-time point prompting. Recommended after LoRA fine-tuning.
+  # "amg": SamAutomaticMaskGenerator — kept for comparison / ablation.
+  inference_mode: "watershed"
+
+  # Watershed inference settings
+  min_nucleus_distance: 7   # Min pixel distance between watershed seeds.
+                             # Lower = more detections (risk: over-splitting touching nuclei)
+                             # Higher = fewer detections (risk: merging touching nuclei)
+                             # Tune based on nucleus size in your images (~7-12 for NuInsSeg)
+  mask_threshold: 0.5        # Sigmoid threshold for converting SAM logits to binary mask
+  min_mask_region_area: 50   # Minimum nucleus area (pixels) — filters noise specks
+
+  # AMG settings (only used when inference_mode: "amg")
+  points_per_side: 32
   pred_iou_thresh: 0.75
   stability_score_thresh: 0.85
   box_nms_thresh: 0.7
-  min_mask_region_area: 100
 
 # -----------------------------------------------------------------------
 # Output

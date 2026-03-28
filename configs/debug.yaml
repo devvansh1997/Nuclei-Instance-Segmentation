@@ -73,13 +73,19 @@ training:
 # Evaluation / Inference
 # -----------------------------------------------------------------------
 evaluation:
-  iou_threshold: 0.5       # IoU threshold for TP matching in PQ/AJI
-  # SAM Automatic Mask Generator settings (used at inference time)
-  points_per_side: 16      # Grid density — lower = faster, fewer detections (debug)
-  pred_iou_thresh: 0.75    # Discard masks with predicted IoU below this
+  iou_threshold: 0.5         # IoU threshold for TP matching in PQ/AJI
+
+  # --- Inference mode ---
+  inference_mode: "watershed" # "watershed" (recommended) or "amg"
+  min_nucleus_distance: 7     # Min pixel distance between watershed seeds
+  mask_threshold: 0.5         # Sigmoid threshold for SAM logit → binary mask
+  min_mask_region_area: 50    # Min nucleus area in pixels
+
+  # AMG settings (only used when inference_mode: "amg")
+  points_per_side: 16
+  pred_iou_thresh: 0.75
   stability_score_thresh: 0.85
-  box_nms_thresh: 0.7      # NMS threshold for removing duplicate masks
-  min_mask_region_area: 50 # Discard masks smaller than this (pixels)
+  box_nms_thresh: 0.7
 
 # -----------------------------------------------------------------------
 # Output
