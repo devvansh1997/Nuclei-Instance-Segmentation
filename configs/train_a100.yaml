@@ -41,32 +41,32 @@ model:
   checkpoint: "weights/mobile_sam.pt"
 
   # LoRA configuration — keep in sync with debug.yaml unless experimenting
-  lora_rank: 4
-  lora_alpha: 4
+  lora_rank: 16
+  lora_alpha: 32    # scale = alpha/rank = 2.0
   lora_dropout: 0.1
 
+  # LoRA injected only into the image encoder qkv projection.
+  # Mask decoder + prompt encoder are fully trainable (no LoRA needed there).
   lora_targets:
     - "qkv"
-    - "proj"
-    - "q_proj"
-    - "k_proj"
-    - "v_proj"
-    - "out_proj"
 
 # -----------------------------------------------------------------------
 # Training
 # -----------------------------------------------------------------------
 training:
-  epochs: 50
-  batch_size: 8          # A100 80GB can comfortably handle bs=8 at 1024x1024
+  epochs: 30             # Converges faster with all-nuclei supervision
+  batch_size: 4          # Reduced: each image now runs many decoder passes
   lr: 1.0e-4
   weight_decay: 1.0e-4
   lr_scheduler: "cosine"
-  warmup_epochs: 5       # 5-epoch linear warmup before cosine decay
-  mixed_precision: "bf16" # bf16 preferred on A100 (more stable than fp16)
+  warmup_epochs: 3
+  mixed_precision: "bf16"
   grad_clip: 1.0
   num_pos_points: 1
   num_neg_points: 1
+  # 0 = use all nuclei per image (recommended for full training runs).
+  # Set to e.g. 32 to cap if GPU memory is a concern.
+  max_nuclei_per_image: 0
 
 # -----------------------------------------------------------------------
 # Evaluation / Inference

@@ -3,13 +3,15 @@ train.py
 
 Train MobileSAM + LoRA on one fold of 5-fold cross-validation.
 
-Training strategy:
-  - For each batch image, randomly sample one nucleus instance.
-  - Use its centroid as a positive point prompt + one background pixel as negative.
-  - Supervise the decoder output with BCE + Dice loss at 256×256 resolution.
-  - Auxiliary IOU prediction loss to keep SAM's confidence head calibrated.
-  - Validation uses the same point-prompted forward pass (proxy Dice) to
-    select the best checkpoint.  Full AJI/PQ evaluation runs in evaluate.py.
+Training strategy (v2):
+  - For each image, run the image encoder ONCE → cache the embedding.
+  - Iterate over ALL nucleus instances in the image (capped by
+    max_nuclei_per_image if set); build a centroid point prompt for each.
+  - Accumulate per-nucleus losses; call backward once per image.
+  - Mask decoder + prompt encoder are fully trainable (not LoRA-only).
+  - LoRA (rank 16, alpha 32) applied only to the image encoder qkv layers.
+  - Validation uses the same per-nucleus proxy pass to select best checkpoint.
+  - Full AJI/PQ evaluation runs in evaluate.py.
 
 Usage:
     python train.py --config configs/debug.yaml   --fold 0
@@ -22,6 +24,7 @@ import logging
 import math
 import time
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -30,7 +33,7 @@ import yaml
 from torch.utils.data import DataLoader
 
 from data.dataset import get_fold_datasets
-from models.sam_lora import build_model, sample_point_prompts
+from models.sam_lora import build_model
 from utils.logger import setup_logger, log_system_info, log_config
 from utils.losses import BCEDiceLoss, iou_prediction_loss
 
@@ -56,8 +59,8 @@ def _collate_fn(batch: list) -> dict:
 # ---------------------------------------------------------------------------
 
 def _build_scheduler(
-    optimizer: torch.optim.Optimizer,
-    cfg: dict,
+    optimizer:       torch.optim.Optimizer,
+    cfg:             dict,
     steps_per_epoch: int,
 ) -> torch.optim.lr_scheduler.LRScheduler:
     training_cfg  = cfg["training"]
@@ -89,80 +92,120 @@ def _build_scheduler(
 
 
 # ---------------------------------------------------------------------------
-# Per-epoch helpers
+# Per-nucleus prompt helpers
 # ---------------------------------------------------------------------------
 
-def _process_batch(
-    batch:    dict,
-    model,
-    cfg:      dict,
-    device:   torch.device,
-    rng:      np.random.Generator,
-) -> tuple:
+def _get_nucleus_ids(
+    instance_mask:  np.ndarray,
+    max_nuclei:     int,
+    rng:            np.random.Generator,
+) -> List[int]:
     """
-    Prepare tensors for one batch.
+    Return a list of nucleus instance IDs to process for one image.
+
+    Parameters
+    ----------
+    instance_mask : (H, W) uint16  — per-nucleus instance IDs (0 = background).
+    max_nuclei    : Cap on number of nuclei per image. 0 = no cap (use all).
+    rng           : Numpy random Generator for reproducible subsampling.
 
     Returns
     -------
-    image_batch       : (B, 3, 1024, 1024) float32 on device
-    point_coords      : (B, N, 2) float32 on device
-    point_labels      : (B, N) int64 on device
-    gt_256            : (B, 1, 256, 256) float32 on device  (resized GT masks)
-    n_valid           : int  number of samples successfully processed
+    List of int instance IDs.  Empty list if the mask has no nuclei.
     """
-    num_pos = cfg["training"].get("num_pos_points", 1)
-    num_neg = cfg["training"].get("num_neg_points", 1)
+    unique_ids  = np.unique(instance_mask)
+    nucleus_ids = [int(i) for i in unique_ids if i > 0]
 
-    image_tensors   = []
-    coords_list     = []
-    labels_list     = []
-    gt_list         = []
+    if not nucleus_ids:
+        return []
 
-    for image_np, inst_mask in zip(batch["image"], batch["instance_mask"]):
-        try:
-            pt_coords, pt_labels, inst_binary, _ = sample_point_prompts(
-                inst_mask, num_pos=num_pos, num_neg=num_neg, rng=rng
-            )
-        except ValueError as exc:
-            logger.debug("Point sampling failed — skipping sample: %s", exc)
-            continue
+    if max_nuclei > 0 and len(nucleus_ids) > max_nuclei:
+        nucleus_ids = rng.choice(
+            nucleus_ids, size=max_nuclei, replace=False
+        ).tolist()
 
-        img_tensor, orig_size, _ = model.preprocess_image(image_np)
-        scaled_coords = model.scale_coords(pt_coords, orig_size)
-
-        image_tensors.append(img_tensor)                    # (1, 3, 1024, 1024)
-        coords_list.append(scaled_coords)                   # (N, 2)
-        labels_list.append(pt_labels)                       # (N,)
-        gt_list.append(inst_binary.astype(np.float32))      # (H, W) float32
-
-    if not image_tensors:
-        return None, None, None, None, 0
-
-    B = len(image_tensors)
-    N = coords_list[0].shape[0]
-    H, W = gt_list[0].shape
-
-    image_batch = torch.cat(image_tensors, dim=0).to(device)     # (B, 3, 1024, 1024)
-
-    point_coords = torch.tensor(
-        np.stack(coords_list, axis=0), dtype=torch.float32
-    ).to(device)                                                   # (B, N, 2)
-
-    point_labels = torch.tensor(
-        np.stack(labels_list, axis=0), dtype=torch.int64
-    ).to(device)                                                   # (B, N)
-
-    gt_tensor = torch.tensor(
-        np.stack(gt_list, axis=0)
-    ).unsqueeze(1).to(device)                                      # (B, 1, H, W)
-
-    # Resize GT to 256×256 (SAM low-res decoder output space)
-    # Use nearest-neighbour to preserve binary mask values exactly
-    gt_256 = F.interpolate(gt_tensor, size=(256, 256), mode="nearest")  # (B, 1, 256, 256)
-
-    return image_batch, point_coords, point_labels, gt_256, B
+    return nucleus_ids
 
 
+def _build_point_prompt(
+    instance_mask: np.ndarray,
+    nucleus_id:    int,
+    orig_size:     Tuple[int, int],
+    model,
+    bg_rows:       np.ndarray,
+    bg_cols:       np.ndarray,
+    rng:           np.random.Generator,
+    device:        torch.device,
+    num_pos:       int = 1,
+    num_neg:       int = 1,
+) -> Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+    """
+    Build a centroid point prompt for one nucleus and its 256×256 GT mask.
+
+    Parameters
+    ----------
+    instance_mask : (H, W) uint16 — full instance mask for the image.
+    nucleus_id    : ID of the nucleus to build a prompt for.
+    orig_size     : (H, W) of the original image (for coordinate scaling).
+    model         : MobileSAMLoRA (for scale_coords).
+    bg_rows/cols  : Pre-computed background pixel coordinates.
+    rng           : Numpy random Generator.
+    device        : Target torch device.
+    num_pos/neg   : Number of positive/negative points.
+
+    Returns
+    -------
+    (coords_t, labels_t, gt_256) on device, or None if the nucleus is empty.
+        coords_t : (1, N, 2) float32
+        labels_t : (1, N)   int64
+        gt_256   : (1, 1, 256, 256) float32
+    """
+    inst_binary = (instance_mask == nucleus_id).astype(np.float32)
+    rows, cols  = np.where(inst_binary)
+
+    if rows.size == 0:
+        return None
+
+    # Centroid as positive point (SAM convention: x=col, y=row)
+    centroid_x, centroid_y = cols.mean(), rows.mean()
+    pos_coords = np.array(
+        [[centroid_x, centroid_y]] * num_pos, dtype=np.float32
+    )
+
+    # Random background pixel(s) as negative points
+    if bg_rows.size > 0:
+        neg_idx    = rng.choice(len(bg_rows), size=num_neg,
+                                replace=(len(bg_rows) < num_neg))
+        neg_coords = np.stack(
+            [bg_cols[neg_idx].astype(np.float32),
+             bg_rows[neg_idx].astype(np.float32)],
+            axis=1,
+        )
+    else:
+        # Fallback: duplicate positive point (edge case — no background)
+        neg_coords = pos_coords.copy()
+
+    point_coords = np.concatenate([pos_coords, neg_coords], axis=0)  # (N, 2)
+    point_labels = np.array(
+        [1] * num_pos + [0] * num_neg, dtype=np.int64
+    )
+
+    scaled   = model.scale_coords(point_coords, orig_size)
+    coords_t = torch.tensor(scaled[None],       dtype=torch.float32).to(device)
+    labels_t = torch.tensor(point_labels[None], dtype=torch.int64).to(device)
+
+    # GT resized to 256×256 (SAM decoder output resolution)
+    gt_256 = F.interpolate(
+        torch.tensor(inst_binary[None, None], dtype=torch.float32),
+        size=(256, 256),
+        mode="nearest",
+    ).to(device)
+
+    return coords_t, labels_t, gt_256
+
+
+# ---------------------------------------------------------------------------
+# Per-epoch helpers
 # ---------------------------------------------------------------------------
 
 def _train_one_epoch(
@@ -177,51 +220,99 @@ def _train_one_epoch(
     amp_dtype,
     epoch:       int,
 ) -> dict:
+    """
+    One training epoch — all nuclei per image, embedding cached per image.
+
+    For each batch:
+      1. For each image: encode once → reuse embedding for all nucleus prompts.
+      2. Accumulate per-nucleus losses (stack + mean) → one backward per image.
+      3. Single optimizer step after all images in the batch.
+
+    Gradient normalization: each image contributes equally (mean over its
+    nuclei), and images are averaged over the batch.
+    """
     model.train()
 
-    num_pos  = cfg["training"].get("num_pos_points", 1)
-    num_neg  = cfg["training"].get("num_neg_points", 1)
-    grad_clip = float(cfg["training"].get("grad_clip", 1.0))
-    rng = np.random.default_rng()   # New RNG each epoch for diverse sampling
+    max_nuclei = cfg["training"].get("max_nuclei_per_image", 0)
+    num_pos    = cfg["training"].get("num_pos_points", 1)
+    num_neg    = cfg["training"].get("num_neg_points", 1)
+    grad_clip  = float(cfg["training"].get("grad_clip", 1.0))
+    use_amp    = amp_dtype is not None
+    rng        = np.random.default_rng()   # Fresh RNG per epoch
 
     sum_loss = sum_bce = sum_dice = 0.0
     n_batches = 0
 
     for batch_idx, batch in enumerate(dataloader):
-        image_batch, point_coords, point_labels, gt_256, n_valid = _process_batch(
-            batch, model, cfg, device, rng
-        )
-
-        if n_valid == 0:
-            logger.debug("Epoch %d  Batch %d: no valid samples — skipping.", epoch, batch_idx)
-            continue
-
-        # SAM's mask decoder is not designed for true multi-image batches —
-        # process each image individually and accumulate gradients before
-        # a single optimizer step (equivalent to an averaged batch loss).
         optimizer.zero_grad()
-        use_amp = amp_dtype is not None
 
-        batch_loss = batch_bce = batch_dice = 0.0
+        n_images        = len(batch["image"])
+        batch_loss      = batch_bce = batch_dice = 0.0
+        n_images_valid  = 0
 
-        for i in range(n_valid):
-            img_i    = image_batch[i:i+1]      # (1, 3, 1024, 1024)
-            coords_i = point_coords[i:i+1]     # (1, N, 2)
-            labels_i = point_labels[i:i+1]     # (1, N)
-            gt_i     = gt_256[i:i+1]           # (1, 1, 256, 256)
+        for image_np, inst_mask in zip(batch["image"], batch["instance_mask"]):
 
-            with torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=use_amp):
-                low_res_masks, iou_preds = model(img_i, coords_i, labels_i)
-                seg_loss, bce, dice      = criterion(low_res_masks, gt_i)
-                iou_loss                 = iou_prediction_loss(iou_preds, low_res_masks, gt_i)
-                # Normalise by n_valid so the effective loss = batch average
-                step_loss                = (seg_loss + 0.1 * iou_loss) / n_valid
+            nucleus_ids = _get_nucleus_ids(inst_mask, max_nuclei, rng)
+            if not nucleus_ids:
+                continue
 
-            scaler.scale(step_loss).backward()   # Accumulate gradients
+            # -- Preprocess image (CPU) ------------------------------------------
+            img_tensor, orig_size, _ = model.preprocess_image(image_np)
+            img_tensor = img_tensor.to(device)
+            bg_rows, bg_cols = np.where(inst_mask == 0)
 
-            batch_loss += step_loss.item() * n_valid   # Undo normalisation for logging
-            batch_bce  += bce.item()
-            batch_dice += dice.item()
+            # -- Encode image ONCE (GPU) -- gradients must flow through LoRA ------
+            with torch.autocast(device_type=device.type, dtype=amp_dtype,
+                                enabled=use_amp):
+                image_emb, image_pe = model.encode_image(img_tensor)
+
+            # -- Decode each nucleus, accumulate losses ---------------------------
+            nucleus_losses: List[torch.Tensor] = []
+            batch_bce_accum = batch_dice_accum = 0.0
+
+            for nid in nucleus_ids:
+                prompt = _build_point_prompt(
+                    inst_mask, nid, orig_size, model,
+                    bg_rows, bg_cols, rng, device, num_pos, num_neg,
+                )
+                if prompt is None:
+                    continue
+                coords_t, labels_t, gt_256 = prompt
+
+                with torch.autocast(device_type=device.type, dtype=amp_dtype,
+                                    enabled=use_amp):
+                    low_res_masks, iou_preds = model.decode_masks(
+                        image_emb, image_pe, coords_t, labels_t
+                    )
+                    seg_loss, bce, dice = criterion(low_res_masks, gt_256)
+                    iou_loss            = iou_prediction_loss(
+                        iou_preds, low_res_masks, gt_256
+                    )
+
+                nucleus_losses.append(seg_loss + 0.1 * iou_loss)
+                batch_bce_accum  += bce.item()
+                batch_dice_accum += dice.item()
+
+            if not nucleus_losses:
+                continue
+
+            n_valid = len(nucleus_losses)
+
+            # Mean over nuclei → normalize by n_images for batch average
+            image_loss = torch.stack(nucleus_losses).mean() / n_images
+            scaler.scale(image_loss).backward()  # Frees this image's graph
+
+            batch_loss += image_loss.item() * n_images   # Undo /n_images for logging
+            batch_bce  += batch_bce_accum / n_valid
+            batch_dice += batch_dice_accum / n_valid
+            n_images_valid += 1
+
+        if n_images_valid == 0:
+            logger.debug(
+                "Epoch %d  Batch %d: no valid samples — skipping.",
+                epoch, batch_idx,
+            )
+            continue
 
         if grad_clip > 0:
             scaler.unscale_(optimizer)
@@ -234,19 +325,19 @@ def _train_one_epoch(
         scaler.update()
         scheduler.step()
 
-        avg_batch_loss = batch_loss / n_valid
-        avg_batch_bce  = batch_bce  / n_valid
-        avg_batch_dice = batch_dice / n_valid
+        avg_loss = batch_loss / n_images_valid
+        avg_bce  = batch_bce  / n_images_valid
+        avg_dice = batch_dice / n_images_valid
 
-        sum_loss  += avg_batch_loss
-        sum_bce   += avg_batch_bce
-        sum_dice  += avg_batch_dice
+        sum_loss  += avg_loss
+        sum_bce   += avg_bce
+        sum_dice  += avg_dice
         n_batches += 1
 
         logger.debug(
             "Epoch %3d  Batch %4d/%d  loss=%.4f  bce=%.4f  dice=%.4f  lr=%.2e",
             epoch, batch_idx + 1, len(dataloader),
-            avg_batch_loss, avg_batch_bce, avg_batch_dice,
+            avg_loss, avg_bce, avg_dice,
             scheduler.get_last_lr()[0],
         )
 
@@ -271,42 +362,74 @@ def _validate_one_epoch(
     epoch:      int,
 ) -> dict:
     """
-    Proxy validation using point-prompted forward pass (same as training).
-    Reports val_loss and val_dice — fast alternative to full AMG evaluation.
+    Proxy validation — same per-nucleus approach as training.
+
+    Caps at 8 nuclei per image for speed (enough for a reliable proxy metric).
+    Fixed RNG seed → reproducible val_dice across epochs.
     """
     model.eval()
-    rng = np.random.default_rng(seed=0)   # Fixed seed → reproducible val metric
+
+    VAL_NUCLEI_CAP = 8       # Small cap: just needs to be a stable proxy
+    use_amp        = amp_dtype is not None
+    rng            = np.random.default_rng(seed=0)
 
     sum_loss = sum_dice = 0.0
     n_batches = 0
 
     for batch in dataloader:
-        image_batch, point_coords, point_labels, gt_256, n_valid = _process_batch(
-            batch, model, cfg, device, rng
-        )
-        if n_valid == 0:
-            continue
-
-        use_amp = amp_dtype is not None
         batch_loss = batch_dice = 0.0
+        n_images_valid = 0
 
-        for i in range(n_valid):
-            with torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=use_amp):
-                low_res_masks, _ = model(
-                    image_batch[i:i+1], point_coords[i:i+1], point_labels[i:i+1]
+        for image_np, inst_mask in zip(batch["image"], batch["instance_mask"]):
+            nucleus_ids = _get_nucleus_ids(inst_mask, VAL_NUCLEI_CAP, rng)
+            if not nucleus_ids:
+                continue
+
+            img_tensor, orig_size, _ = model.preprocess_image(image_np)
+            img_tensor = img_tensor.to(device)
+            bg_rows, bg_cols = np.where(inst_mask == 0)
+
+            with torch.autocast(device_type=device.type, dtype=amp_dtype,
+                                enabled=use_amp):
+                image_emb, image_pe = model.encode_image(img_tensor)
+
+            image_loss = image_dice = 0.0
+            n_valid = 0
+
+            for nid in nucleus_ids:
+                prompt = _build_point_prompt(
+                    inst_mask, nid, orig_size, model,
+                    bg_rows, bg_cols, rng, device,
                 )
-                loss, _, dice = criterion(low_res_masks, gt_256[i:i+1])
-            batch_loss += loss.item()
-            batch_dice += dice.item()
+                if prompt is None:
+                    continue
+                coords_t, labels_t, gt_256 = prompt
 
-        sum_loss  += batch_loss / n_valid
-        sum_dice  += batch_dice / n_valid
-        n_batches += 1
+                with torch.autocast(device_type=device.type, dtype=amp_dtype,
+                                    enabled=use_amp):
+                    low_res_masks, _ = model.decode_masks(
+                        image_emb, image_pe, coords_t, labels_t
+                    )
+                    loss, _, dice = criterion(low_res_masks, gt_256)
+
+                image_loss += loss.item()
+                image_dice += dice.item()
+                n_valid    += 1
+
+            if n_valid > 0:
+                batch_loss += image_loss / n_valid
+                batch_dice += image_dice / n_valid
+                n_images_valid += 1
+
+        if n_images_valid > 0:
+            sum_loss  += batch_loss / n_images_valid
+            sum_dice  += batch_dice / n_images_valid
+            n_batches += 1
 
     denom = max(n_batches, 1)
     return {
         "val_loss": sum_loss / denom,
-        "val_dice": 1.0 - (sum_dice / denom),  # Convert dice LOSS → dice SCORE
+        "val_dice": 1.0 - (sum_dice / denom),   # Convert dice LOSS → dice SCORE
     }
 
 
@@ -382,7 +505,7 @@ def train_fold(cfg: dict, fold_idx: int) -> dict:
         num_workers = num_workers,
         pin_memory  = (device.type == "cuda"),
         collate_fn  = _collate_fn,
-        drop_last   = True,   # Avoid batch of 1 which can cause BN issues
+        drop_last   = True,
     )
     val_loader = DataLoader(
         val_dataset,
@@ -404,7 +527,7 @@ def train_fold(cfg: dict, fold_idx: int) -> dict:
     model = build_model(cfg, device)
 
     # -----------------------------------------------------------------------
-    # Optimizer (only LoRA parameters)
+    # Optimizer — now includes mask decoder + prompt encoder params
     # -----------------------------------------------------------------------
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(
@@ -413,13 +536,13 @@ def train_fold(cfg: dict, fold_idx: int) -> dict:
         weight_decay = float(cfg["training"]["weight_decay"]),
     )
     logger_.info(
-        "Optimizer: AdamW | lr=%.2e | wd=%.2e | param_groups=%d params",
+        "Optimizer: AdamW | lr=%.2e | wd=%.2e | trainable_params=%d",
         cfg["training"]["lr"], cfg["training"]["weight_decay"],
         sum(p.numel() for p in trainable_params),
     )
 
     # -----------------------------------------------------------------------
-    # Scheduler (steps per batch, not per epoch)
+    # Scheduler
     # -----------------------------------------------------------------------
     scheduler = _build_scheduler(optimizer, cfg, steps_per_epoch=len(train_loader))
 
@@ -431,26 +554,28 @@ def train_fold(cfg: dict, fold_idx: int) -> dict:
     # -----------------------------------------------------------------------
     # Training loop
     # -----------------------------------------------------------------------
-    n_epochs           = cfg["training"]["epochs"]
-    save_every         = cfg["debug"].get("save_every_n_epochs", 5)
-    ckpt_dir           = _checkpoint_dir(cfg, fold_idx)
+    n_epochs   = cfg["training"]["epochs"]
+    save_every = cfg["debug"].get("save_every_n_epochs", 5)
+    ckpt_dir   = _checkpoint_dir(cfg, fold_idx)
+
+    max_nuclei = cfg["training"].get("max_nuclei_per_image", 0)
+    logger_.info(
+        "Starting training | fold=%d | epochs=%d | max_nuclei_per_image=%s",
+        fold_idx, n_epochs, max_nuclei if max_nuclei > 0 else "all",
+    )
 
     best_val_dice = 0.0
     best_epoch    = 0
     history       = []
 
-    logger_.info("Starting training | fold=%d | epochs=%d", fold_idx, n_epochs)
-
     for epoch in range(1, n_epochs + 1):
         t0 = time.time()
 
-        # Train
         train_metrics = _train_one_epoch(
             model, train_loader, optimizer, scheduler,
             criterion, scaler, cfg, device, amp_dtype, epoch,
         )
 
-        # Validate
         val_metrics = _validate_one_epoch(
             model, val_loader, criterion, cfg, device, amp_dtype, epoch,
         )
@@ -470,7 +595,6 @@ def train_fold(cfg: dict, fold_idx: int) -> dict:
         row = {"epoch": epoch, **train_metrics, **val_metrics, "lr": lr_now}
         history.append(row)
 
-        # Save best checkpoint
         if val_metrics["val_dice"] > best_val_dice:
             best_val_dice = val_metrics["val_dice"]
             best_epoch    = epoch
@@ -484,18 +608,20 @@ def train_fold(cfg: dict, fold_idx: int) -> dict:
                 best_val_dice, epoch,
             )
 
-        # Periodic checkpoint
         if epoch % save_every == 0:
             _save_checkpoint(
                 model,
                 path = ckpt_dir / f"epoch_{epoch:03d}_lora.pt",
-                meta = {"epoch": epoch, "val_dice": val_metrics["val_dice"], "fold": fold_idx},
+                meta = {"epoch": epoch, "val_dice": val_metrics["val_dice"],
+                        "fold": fold_idx},
             )
 
     # -----------------------------------------------------------------------
     # Save training history
     # -----------------------------------------------------------------------
-    history_path = Path(cfg["output"]["save_dir"]) / f"fold_{fold_idx}" / "train_history.json"
+    history_path = (
+        Path(cfg["output"]["save_dir"]) / f"fold_{fold_idx}" / "train_history.json"
+    )
     history_path.parent.mkdir(parents=True, exist_ok=True)
     with open(history_path, "w") as f:
         json.dump(history, f, indent=2)

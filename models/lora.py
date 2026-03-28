@@ -8,10 +8,12 @@ Reference:
     https://arxiv.org/abs/2106.09685
 
 Public API:
-    LoRALinear              -- nn.Linear wrapper with a low-rank branch
-    inject_lora(...)        -- walk a model and replace matching Linear layers
-    freeze_non_lora(model)  -- freeze everything except lora_A / lora_B
-    count_parameters(model) -- return {total, trainable, frozen} counts
+    LoRALinear                        -- nn.Linear wrapper with a low-rank branch
+    inject_lora(...)                  -- walk a model and replace matching Linear layers
+    freeze_non_lora(model)            -- freeze everything except lora_A / lora_B
+    freeze_image_encoder_non_lora(m)  -- freeze only the image encoder (non-LoRA);
+                                         mask_decoder + prompt_encoder stay trainable
+    count_parameters(model)           -- return {total, trainable, frozen} counts
 """
 
 import logging
@@ -214,6 +216,49 @@ def freeze_non_lora(model: nn.Module) -> None:
     logger.debug(
         "freeze_non_lora: %d trainable params | %d frozen params",
         n_trainable, n_frozen,
+    )
+
+
+def freeze_image_encoder_non_lora(model: nn.Module) -> None:
+    """
+    Freeze image encoder parameters **except** lora_A and lora_B matrices.
+    Mask decoder and prompt encoder are left **fully trainable**.
+
+    Use this instead of freeze_non_lora() when you want the decoder and
+    prompt encoder to adapt freely (not just through LoRA).
+
+    Must be called *after* inject_lora() so that LoRALinear wrappers are
+    already in place in the image encoder.
+
+    After this call:
+        image_encoder params:  requires_grad == True  ←→  "lora_A"/"lora_B" in name
+        mask_decoder params:   requires_grad == True  (all)
+        prompt_encoder params: requires_grad == True  (all)
+    """
+    enc_trainable = enc_frozen = 0
+
+    for name, param in model.image_encoder.named_parameters():
+        is_lora = ("lora_A" in name) or ("lora_B" in name)
+        param.requires_grad_(is_lora)
+        if is_lora:
+            enc_trainable += param.numel()
+        else:
+            enc_frozen += param.numel()
+
+    dec_trainable = sum(p.numel() for p in model.mask_decoder.parameters())
+    pe_trainable  = sum(p.numel() for p in model.prompt_encoder.parameters())
+
+    # Ensure decoder and prompt encoder are trainable (in case anything froze them)
+    for param in model.mask_decoder.parameters():
+        param.requires_grad_(True)
+    for param in model.prompt_encoder.parameters():
+        param.requires_grad_(True)
+
+    logger.debug(
+        "freeze_image_encoder_non_lora: "
+        "encoder LoRA trainable=%d | encoder frozen=%d | "
+        "mask_decoder trainable=%d | prompt_encoder trainable=%d",
+        enc_trainable, enc_frozen, dec_trainable, pe_trainable,
     )
 
 

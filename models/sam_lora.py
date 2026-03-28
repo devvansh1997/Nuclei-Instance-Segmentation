@@ -29,6 +29,7 @@ import torch.nn as nn
 from models.lora import (
     inject_lora,
     freeze_non_lora,
+    freeze_image_encoder_non_lora,
     count_parameters,
     log_parameter_summary,
 )
@@ -127,9 +128,11 @@ class MobileSAMLoRA(nn.Module):
             )
 
         # ------------------------------------------------------------------
-        # 3. Freeze everything except LoRA parameters
+        # 3. Freeze image encoder (non-LoRA only).
+        #    Mask decoder + prompt encoder remain fully trainable so they
+        #    can adapt freely — not just through LoRA branches.
         # ------------------------------------------------------------------
-        freeze_non_lora(self.sam)
+        freeze_image_encoder_non_lora(self.sam)
 
         # ------------------------------------------------------------------
         # 4. Log parameter breakdown (always at INFO — needed for the report)
@@ -192,6 +195,73 @@ class MobileSAMLoRA(nn.Module):
         )
 
         return image_tensor, original_size, input_size
+
+    def encode_image(
+        self,
+        image_tensor: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Run the image encoder and return (image_embeddings, image_pe).
+
+        Call ONCE per image and cache the result.  Pass both outputs to
+        decode_masks() for every nucleus prompt — avoids re-running the
+        encoder (the expensive part) for each nucleus.
+
+        Do NOT wrap this in torch.no_grad() during training — gradients
+        must flow back through the encoder to reach the LoRA weights.
+
+        Parameters
+        ----------
+        image_tensor : (1, 3, 1024, 1024) float32 — preprocessed image.
+
+        Returns
+        -------
+        image_embeddings : (1, 256, 64, 64)  encoder output.
+        image_pe         : (1, 256, 64, 64)  dense positional encoding
+                           from the prompt encoder (constant per image size).
+        """
+        image_embeddings = self.sam.image_encoder(image_tensor)
+        image_pe         = self.sam.prompt_encoder.get_dense_pe()
+        return image_embeddings, image_pe
+
+    def decode_masks(
+        self,
+        image_embeddings: torch.Tensor,
+        image_pe:         torch.Tensor,
+        point_coords:     torch.Tensor,
+        point_labels:     torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Run prompt encoder + mask decoder using a cached image embedding.
+
+        Call once per nucleus after encode_image() has been called once for
+        the containing image.  This is the inner loop of the training step.
+
+        Parameters
+        ----------
+        image_embeddings : (1, 256, 64, 64) — from encode_image().
+        image_pe         : (1, 256, 64, 64) — from encode_image().
+        point_coords     : (1, N, 2) float32 — scaled point prompts.
+        point_labels     : (1, N)   int64    — 1=positive, 0=negative.
+
+        Returns
+        -------
+        low_res_masks   : (1, 1, 256, 256) float32 — raw decoder logits.
+        iou_predictions : (1, 1)           float32 — predicted mask IoU.
+        """
+        sparse_embeddings, dense_embeddings = self.sam.prompt_encoder(
+            points=(point_coords, point_labels),
+            boxes=None,
+            masks=None,
+        )
+        low_res_masks, iou_predictions = self.sam.mask_decoder(
+            image_embeddings         = image_embeddings,
+            image_pe                 = image_pe,
+            sparse_prompt_embeddings = sparse_embeddings,
+            dense_prompt_embeddings  = dense_embeddings,
+            multimask_output         = False,
+        )
+        return low_res_masks, iou_predictions
 
     def scale_coords(
         self,

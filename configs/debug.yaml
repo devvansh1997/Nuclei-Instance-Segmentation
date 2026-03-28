@@ -37,20 +37,14 @@ model:
   checkpoint: "weights/mobile_sam.pt"
 
   # LoRA configuration
-  lora_rank: 4           # Low-rank dimension r
-  lora_alpha: 4          # Scaling factor alpha (effective scale = alpha/rank = 1.0)
-  lora_dropout: 0.1      # Dropout applied inside LoRA branch
+  lora_rank: 16
+  lora_alpha: 32         # scale = alpha/rank = 2.0
+  lora_dropout: 0.1
 
-  # Which Linear layer names to inject LoRA into
-  # TinyViT image encoder attention : qkv, proj
-  # Mask decoder cross-attention     : q_proj, k_proj, v_proj, out_proj
+  # LoRA only in the image encoder qkv projection.
+  # Mask decoder + prompt encoder are fully trainable.
   lora_targets:
     - "qkv"
-    - "proj"
-    - "q_proj"
-    - "k_proj"
-    - "v_proj"
-    - "out_proj"
 
 # -----------------------------------------------------------------------
 # Training
@@ -68,6 +62,7 @@ training:
   # (1 positive centroid + 1 negative background point = 2 points total)
   num_pos_points: 1
   num_neg_points: 1
+  max_nuclei_per_image: 8  # Cap for fast debug runs
 
 # -----------------------------------------------------------------------
 # Evaluation / Inference
