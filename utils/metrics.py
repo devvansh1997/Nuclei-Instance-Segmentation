@@ -84,12 +84,11 @@ def aggregated_jaccard_index(
     Algorithm (from Kumar et al., 2017):
       For each GT instance G_i:
         1. Find the prediction P_j with the maximum intersection with G_i.
-        2. Add |G_i ∩ P_j| to the numerator.
-        3. Add |G_i ∪ P_j| to the denominator.
-        4. Mark P_j as used.
+        2. If P_j has not been used, add |G_i ∩ P_j| to numerator and
+           |G_i ∪ P_j| to denominator. Mark P_j as used.
+        3. If no unused P_j overlaps, add |G_i| to denominator.
       For each unused prediction P_k:
-        5. Add |P_k| to the denominator (false positive penalty).
-      AJI = numerator / denominator
+        4. Add |P_k| to the denominator (false positive penalty).
 
     Parameters
     ----------
@@ -98,7 +97,7 @@ def aggregated_jaccard_index(
 
     Returns
     -------
-    float in [0, 1].  Returns 1.0 if both masks contain no instances.
+    float in [0, 1].
     """
     gt_ids   = _get_instance_ids(gt_instance_mask)
     pred_ids = _get_instance_ids(pred_instance_mask)
@@ -106,43 +105,53 @@ def aggregated_jaccard_index(
     if len(gt_ids) == 0 and len(pred_ids) == 0:
         return 1.0
     if len(gt_ids) == 0:
-        return 0.0     # All predictions are FP
+        return 0.0
     if len(pred_ids) == 0:
-        return 0.0     # All GT are FN
+        return 0.0
 
-    # Pre-compute pixel areas for all instances
+    # Pre-compute areas
     gt_areas   = {i: np.sum(gt_instance_mask == i)   for i in gt_ids}
     pred_areas = {i: np.sum(pred_instance_mask == i) for i in pred_ids}
+
+    # Efficiently find all intersections using a single pass
+    # (gt_id, pred_id) -> intersection_area
+    intersections = {}
+    combined = gt_instance_mask.astype(np.int64) * (pred_instance_mask.max() + 1) + pred_instance_mask
+    unique_combined, counts = np.unique(combined, return_counts=True)
+    
+    max_pred_id = pred_instance_mask.max()
+    for val, count in zip(unique_combined, counts):
+        gt_id = val // (max_pred_id + 1)
+        pred_id = val % (max_pred_id + 1)
+        if gt_id > 0 and pred_id > 0:
+            intersections[(int(gt_id), int(pred_id))] = int(count)
 
     numerator   = 0
     denominator = 0
     used_preds  = set()
 
+    # Step 1-3: Match GT to Pred
     for gt_id in gt_ids:
-        gt_mask = (gt_instance_mask == gt_id)
-
-        # Find prediction with maximum intersection
-        best_pred_id    = None
-        best_intersect  = 0
-
+        best_pred_id   = None
+        best_intersect = 0
+        
+        # Find best UNUSED prediction
         for pred_id in pred_ids:
-            pred_mask  = (pred_instance_mask == pred_id)
-            intersect  = np.logical_and(gt_mask, pred_mask).sum()
-            if intersect > best_intersect:
+            intersect = intersections.get((gt_id, pred_id), 0)
+            if intersect > best_intersect and pred_id not in used_preds:
                 best_intersect = intersect
                 best_pred_id   = pred_id
 
-        if best_pred_id is not None and best_intersect > 0:
+        if best_pred_id is not None:
             union = gt_areas[gt_id] + pred_areas[best_pred_id] - best_intersect
             numerator   += best_intersect
             denominator += union
             used_preds.add(best_pred_id)
         else:
-            # No overlapping prediction — GT instance fully unmatched
-            numerator   += 0
+            # GT unmatched
             denominator += gt_areas[gt_id]
 
-    # False positive penalty: unmatched predictions
+    # Step 4: Penalty for unused predictions
     for pred_id in pred_ids:
         if pred_id not in used_preds:
             denominator += pred_areas[pred_id]
@@ -150,12 +159,7 @@ def aggregated_jaccard_index(
     if denominator == 0:
         return 1.0
 
-    aji = float(numerator / denominator)
-    logger.debug(
-        "AJI | gt=%d  pred=%d  intersect_sum=%d  denom=%d  AJI=%.4f",
-        len(gt_ids), len(pred_ids), numerator, denominator, aji,
-    )
-    return aji
+    return float(numerator / denominator)
 
 
 # ---------------------------------------------------------------------------

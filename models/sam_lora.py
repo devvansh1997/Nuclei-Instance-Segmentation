@@ -382,51 +382,50 @@ class MobileSAMLoRA(nn.Module):
 
     def save_lora_weights(self, path: str) -> None:
         """
-        Save only the LoRA (lora_A, lora_B) parameters.
+        Save all trainable parameters (LoRA layers + Mask Decoder + Prompt Encoder).
 
-        These are the only weights that change during fine-tuning.
-        Storing them separately keeps checkpoint files small and the
-        original MobileSAM weights reusable.
+        Storing these separately keeps checkpoint files small while ensuring that
+        all learned adaptation (both in the encoder and the heads) is preserved.
         """
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        lora_state = {
+        # Collect all parameters that were being optimized
+        trainable_state = {
             k: v
             for k, v in self.sam.state_dict().items()
-            if "lora_A" in k or "lora_B" in k
+            if any(substring in k for substring in ["lora_A", "lora_B", "mask_decoder", "prompt_encoder"])
         }
 
-        torch.save(lora_state, str(path))
+        torch.save(trainable_state, str(path))
         logger.info(
-            "LoRA weights saved → %s  (%d tensors, %.2f MB)",
+            "Trainable weights saved → %s  (%d tensors, %.2f MB)",
             path,
-            len(lora_state),
-            sum(v.numel() * v.element_size() for v in lora_state.values()) / 1e6,
+            len(trainable_state),
+            sum(v.numel() * v.element_size() for v in trainable_state.values()) / 1e6,
         )
 
     def load_lora_weights(self, path: str) -> None:
         """
-        Load previously saved LoRA weights into the current model.
+        Load previously saved trainable weights into the current model.
 
-        Uses strict=False so that non-LoRA keys (frozen weights) are
-        simply ignored — the full MobileSAM weights are already loaded
-        from the original checkpoint.
+        Uses strict=False so that frozen image encoder weights are not
+        overwritten or complained about.
         """
         path = Path(path)
         if not path.exists():
-            raise FileNotFoundError(f"LoRA checkpoint not found: {path}")
+            raise FileNotFoundError(f"Trainable weights checkpoint not found: {path}")
 
-        lora_state = torch.load(str(path), map_location="cpu")
-        missing, unexpected = self.sam.load_state_dict(lora_state, strict=False)
+        trainable_state = torch.load(str(path), map_location="cpu")
+        missing, unexpected = self.sam.load_state_dict(trainable_state, strict=False)
 
         logger.info(
-            "LoRA weights loaded ← %s | tensors=%d | missing=%d | unexpected=%d",
-            path, len(lora_state), len(missing), len(unexpected),
+            "Trainable weights loaded ← %s | tensors=%d | missing=%d | unexpected=%d",
+            path, len(trainable_state), len(missing), len(unexpected),
         )
 
         if unexpected:
-            logger.warning("Unexpected keys when loading LoRA weights: %s", unexpected)
+            logger.warning("Unexpected keys when loading trainable weights: %s", unexpected)
 
 
 # ---------------------------------------------------------------------------
