@@ -54,7 +54,7 @@ model:
 # Training
 # -----------------------------------------------------------------------
 training:
-  epochs: 30             # Converges faster with all-nuclei supervision
+  epochs: 10             # Converges faster with all-nuclei supervision
   batch_size: 4          # Reduced: each image now runs many decoder passes
   lr: 1.0e-4
   weight_decay: 1.0e-4
@@ -75,16 +75,12 @@ evaluation:
   iou_threshold: 0.5
 
   # --- Inference mode ---
-  # "watershed" (default): HED foreground → distance-transform watershed → SAM centroid prompting
-  #   Consistent with training-time point prompting. Recommended after LoRA fine-tuning.
+  # "gt_box" (default): Inference using Ground Truth bounding boxes.
+  #   Matches the reference repository's evaluation protocol.
   # "amg": SamAutomaticMaskGenerator — kept for comparison / ablation.
-  inference_mode: "watershed"
+  inference_mode: "gt_box"
 
-  # Watershed inference settings
-  min_nucleus_distance: 7   # Min pixel distance between watershed seeds.
-                             # Lower = more detections (risk: over-splitting touching nuclei)
-                             # Higher = fewer detections (risk: merging touching nuclei)
-                             # Tune based on nucleus size in your images (~7-12 for NuInsSeg)
+  # Inference settings
   mask_threshold: 0.5        # Sigmoid threshold for converting SAM logits to binary mask
   min_mask_region_area: 50   # Minimum nucleus area (pixels) — filters noise specks
 
