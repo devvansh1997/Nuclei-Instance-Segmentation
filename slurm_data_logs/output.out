@@ -1,0 +1,926 @@
+Virtual environment activated
+Starting cross_validate.py on entire dataset
+[11:30:07] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/cross_validate/run.log
+[11:30:07] [INFO    ] Log level : INFO
+[11:30:07] [INFO    ] ============================================================
+[11:30:07] [INFO    ] SYSTEM INFO
+[11:30:07] [INFO    ] ============================================================
+[11:30:07] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[11:30:07] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[11:30:07] [INFO    ] PyTorch   : 2.10.0+cu126
+[11:30:10] [INFO    ] CUDA avail: True
+[11:30:10] [INFO    ] GPU count : 1
+[11:30:10] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[11:30:10] [INFO    ] CUDA ver  : 12.6
+[11:30:11] [INFO    ] cuDNN ver : 91002
+[11:30:11] [INFO    ] torchvision: 0.25.0+cu126
+[11:30:11] [INFO    ] timm      : 0.9.16
+[11:30:11] [INFO    ] NumPy     : 2.2.6
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] CONFIG
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ]   debug:
+[11:30:11] [INFO    ]     enabled: false
+[11:30:11] [INFO    ]     max_samples: null
+[11:30:11] [INFO    ]     log_level: INFO
+[11:30:11] [INFO    ]     log_to_file: true
+[11:30:11] [INFO    ]     save_every_n_epochs: 5
+[11:30:11] [INFO    ]   data:
+[11:30:11] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[11:30:11] [INFO    ]     n_folds: 5
+[11:30:11] [INFO    ]     seed: 42
+[11:30:11] [INFO    ]     image_size: 1024
+[11:30:11] [INFO    ]     num_workers: 4
+[11:30:11] [INFO    ]   model:
+[11:30:11] [INFO    ]     type: mobile_sam
+[11:30:11] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[11:30:11] [INFO    ]     lora_rank: 16
+[11:30:11] [INFO    ]     lora_alpha: 32
+[11:30:11] [INFO    ]     lora_dropout: 0.1
+[11:30:11] [INFO    ]     lora_targets:
+[11:30:11] [INFO    ]     - qkv
+[11:30:11] [INFO    ]   training:
+[11:30:11] [INFO    ]     epochs: 10
+[11:30:11] [INFO    ]     batch_size: 4
+[11:30:11] [INFO    ]     lr: 0.0001
+[11:30:11] [INFO    ]     weight_decay: 0.0001
+[11:30:11] [INFO    ]     lr_scheduler: cosine
+[11:30:11] [INFO    ]     warmup_epochs: 3
+[11:30:11] [INFO    ]     mixed_precision: bf16
+[11:30:11] [INFO    ]     grad_clip: 1.0
+[11:30:11] [INFO    ]     num_pos_points: 1
+[11:30:11] [INFO    ]     num_neg_points: 1
+[11:30:11] [INFO    ]     max_nuclei_per_image: 0
+[11:30:11] [INFO    ]   evaluation:
+[11:30:11] [INFO    ]     iou_threshold: 0.5
+[11:30:11] [INFO    ]     inference_mode: gt_box
+[11:30:11] [INFO    ]     mask_threshold: 0.5
+[11:30:11] [INFO    ]     min_mask_region_area: 50
+[11:30:11] [INFO    ]     points_per_side: 32
+[11:30:11] [INFO    ]     pred_iou_thresh: 0.75
+[11:30:11] [INFO    ]     stability_score_thresh: 0.85
+[11:30:11] [INFO    ]     box_nms_thresh: 0.7
+[11:30:11] [INFO    ]   output:
+[11:30:11] [INFO    ]     save_dir: outputs/train_a100
+[11:30:11] [INFO    ]     num_vis_samples: 8
+[11:30:11] [INFO    ]   _config_path: configs/train_a100.yaml
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_0/run.log
+[11:30:11] [INFO    ] Log level : INFO
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] SYSTEM INFO
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[11:30:11] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[11:30:11] [INFO    ] PyTorch   : 2.10.0+cu126
+[11:30:11] [INFO    ] CUDA avail: True
+[11:30:11] [INFO    ] GPU count : 1
+[11:30:11] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[11:30:11] [INFO    ] CUDA ver  : 12.6
+[11:30:11] [INFO    ] cuDNN ver : 91002
+[11:30:11] [INFO    ] torchvision: 0.25.0+cu126
+[11:30:11] [INFO    ] timm      : 0.9.16
+[11:30:11] [INFO    ] NumPy     : 2.2.6
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] CONFIG
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ]   debug:
+[11:30:11] [INFO    ]     enabled: false
+[11:30:11] [INFO    ]     max_samples: null
+[11:30:11] [INFO    ]     log_level: INFO
+[11:30:11] [INFO    ]     log_to_file: true
+[11:30:11] [INFO    ]     save_every_n_epochs: 5
+[11:30:11] [INFO    ]   data:
+[11:30:11] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[11:30:11] [INFO    ]     n_folds: 5
+[11:30:11] [INFO    ]     seed: 42
+[11:30:11] [INFO    ]     image_size: 1024
+[11:30:11] [INFO    ]     num_workers: 4
+[11:30:11] [INFO    ]   model:
+[11:30:11] [INFO    ]     type: mobile_sam
+[11:30:11] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[11:30:11] [INFO    ]     lora_rank: 16
+[11:30:11] [INFO    ]     lora_alpha: 32
+[11:30:11] [INFO    ]     lora_dropout: 0.1
+[11:30:11] [INFO    ]     lora_targets:
+[11:30:11] [INFO    ]     - qkv
+[11:30:11] [INFO    ]   training:
+[11:30:11] [INFO    ]     epochs: 10
+[11:30:11] [INFO    ]     batch_size: 4
+[11:30:11] [INFO    ]     lr: 0.0001
+[11:30:11] [INFO    ]     weight_decay: 0.0001
+[11:30:11] [INFO    ]     lr_scheduler: cosine
+[11:30:11] [INFO    ]     warmup_epochs: 3
+[11:30:11] [INFO    ]     mixed_precision: bf16
+[11:30:11] [INFO    ]     grad_clip: 1.0
+[11:30:11] [INFO    ]     num_pos_points: 1
+[11:30:11] [INFO    ]     num_neg_points: 1
+[11:30:11] [INFO    ]     max_nuclei_per_image: 0
+[11:30:11] [INFO    ]   evaluation:
+[11:30:11] [INFO    ]     iou_threshold: 0.5
+[11:30:11] [INFO    ]     inference_mode: gt_box
+[11:30:11] [INFO    ]     mask_threshold: 0.5
+[11:30:11] [INFO    ]     min_mask_region_area: 50
+[11:30:11] [INFO    ]     points_per_side: 32
+[11:30:11] [INFO    ]     pred_iou_thresh: 0.75
+[11:30:11] [INFO    ]     stability_score_thresh: 0.85
+[11:30:11] [INFO    ]     box_nms_thresh: 0.7
+[11:30:11] [INFO    ]   output:
+[11:30:11] [INFO    ]     save_dir: outputs/train_a100
+[11:30:11] [INFO    ]     num_vis_samples: 8
+[11:30:11] [INFO    ]   _config_path: configs/train_a100.yaml
+[11:30:11] [INFO    ] ============================================================
+[11:30:11] [INFO    ] Device: cuda
+[11:30:11] [INFO    ] Mixed precision: bf16 | GradScaler: False
+[11:30:14] [INFO    ] DataLoaders | train_batches=133 | val_batches=34
+[11:30:19] [INFO    ] Optimizer: AdamW | lr=1.00e-04 | wd=1.00e-04 | trainable_params=4183344
+[11:30:19] [INFO    ] Starting training | fold=0 | epochs=10 | max_nuclei_per_image=all
+[11:42:00] [INFO    ] Epoch   1/10 | loss=0.4337  bce=0.0239  dice_loss=0.3989 | val_loss=0.3955  val_dice=0.6191 | lr=3.33e-05 | 700.8s
+[11:42:00] [INFO    ]   ↑ New best val_dice=0.6191 at epoch 1 — checkpoint saved.
+[11:52:48] [INFO    ] Epoch   2/10 | loss=0.3335  bce=0.0117  dice_loss=0.3177 | val_loss=0.3484  val_dice=0.6647 | lr=6.67e-05 | 647.9s
+[11:52:50] [INFO    ]   ↑ New best val_dice=0.6647 at epoch 2 — checkpoint saved.
+[12:03:46] [INFO    ] Epoch   3/10 | loss=0.3094  bce=0.0107  dice_loss=0.2950 | val_loss=0.3356  val_dice=0.6755 | lr=1.00e-04 | 655.7s
+[12:03:46] [INFO    ]   ↑ New best val_dice=0.6755 at epoch 3 — checkpoint saved.
+[12:14:45] [INFO    ] Epoch   4/10 | loss=0.2918  bce=0.0096  dice_loss=0.2787 | val_loss=0.3174  val_dice=0.6925 | lr=9.50e-05 | 658.7s
+[12:14:45] [INFO    ]   ↑ New best val_dice=0.6925 at epoch 4 — checkpoint saved.
+[12:25:38] [INFO    ] Epoch   5/10 | loss=0.2797  bce=0.0092  dice_loss=0.2672 | val_loss=0.3257  val_dice=0.6860 | lr=8.12e-05 | 652.4s
+[12:36:56] [INFO    ] Epoch   6/10 | loss=0.2719  bce=0.0087  dice_loss=0.2599 | val_loss=0.3105  val_dice=0.6992 | lr=6.11e-05 | 677.8s
+[12:36:57] [INFO    ]   ↑ New best val_dice=0.6992 at epoch 6 — checkpoint saved.
+[12:47:55] [INFO    ] Epoch   7/10 | loss=0.2649  bce=0.0084  dice_loss=0.2533 | val_loss=0.2976  val_dice=0.7120 | lr=3.89e-05 | 658.5s
+[12:47:56] [INFO    ]   ↑ New best val_dice=0.7120 at epoch 7 — checkpoint saved.
+[12:59:03] [INFO    ] Epoch   8/10 | loss=0.2607  bce=0.0083  dice_loss=0.2492 | val_loss=0.2893  val_dice=0.7192 | lr=1.88e-05 | 666.6s
+[12:59:03] [INFO    ]   ↑ New best val_dice=0.7192 at epoch 8 — checkpoint saved.
+[13:10:03] [INFO    ] Epoch   9/10 | loss=0.2573  bce=0.0080  dice_loss=0.2462 | val_loss=0.2868  val_dice=0.7216 | lr=4.95e-06 | 660.1s
+[13:10:04] [INFO    ]   ↑ New best val_dice=0.7216 at epoch 9 — checkpoint saved.
+[13:21:09] [INFO    ] Epoch  10/10 | loss=0.2563  bce=0.0081  dice_loss=0.2452 | val_loss=0.2882  val_dice=0.7205 | lr=0.00e+00 | 664.9s
+[13:21:09] [INFO    ] Training history saved → outputs/train_a100/fold_0/train_history.json
+[13:21:09] [INFO    ] Fold 0 training complete | best_val_dice=0.7216 at epoch 9
+[13:21:10] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_0_eval/run.log
+[13:21:10] [INFO    ] Log level : INFO
+[13:21:10] [INFO    ] ============================================================
+[13:21:10] [INFO    ] SYSTEM INFO
+[13:21:10] [INFO    ] ============================================================
+[13:21:10] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[13:21:10] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[13:21:10] [INFO    ] PyTorch   : 2.10.0+cu126
+[13:21:10] [INFO    ] CUDA avail: True
+[13:21:10] [INFO    ] GPU count : 1
+[13:21:10] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[13:21:10] [INFO    ] CUDA ver  : 12.6
+[13:21:10] [INFO    ] cuDNN ver : 91002
+[13:21:10] [INFO    ] torchvision: 0.25.0+cu126
+[13:21:10] [INFO    ] timm      : 0.9.16
+[13:21:10] [INFO    ] NumPy     : 2.2.6
+[13:21:10] [INFO    ] ============================================================
+[13:21:10] [INFO    ] ============================================================
+[13:21:10] [INFO    ] CONFIG
+[13:21:10] [INFO    ] ============================================================
+[13:21:10] [INFO    ]   debug:
+[13:21:10] [INFO    ]     enabled: false
+[13:21:10] [INFO    ]     max_samples: null
+[13:21:10] [INFO    ]     log_level: INFO
+[13:21:10] [INFO    ]     log_to_file: true
+[13:21:10] [INFO    ]     save_every_n_epochs: 5
+[13:21:10] [INFO    ]   data:
+[13:21:10] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[13:21:10] [INFO    ]     n_folds: 5
+[13:21:10] [INFO    ]     seed: 42
+[13:21:10] [INFO    ]     image_size: 1024
+[13:21:10] [INFO    ]     num_workers: 4
+[13:21:10] [INFO    ]   model:
+[13:21:10] [INFO    ]     type: mobile_sam
+[13:21:10] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[13:21:10] [INFO    ]     lora_rank: 16
+[13:21:10] [INFO    ]     lora_alpha: 32
+[13:21:10] [INFO    ]     lora_dropout: 0.1
+[13:21:10] [INFO    ]     lora_targets:
+[13:21:10] [INFO    ]     - qkv
+[13:21:10] [INFO    ]   training:
+[13:21:10] [INFO    ]     epochs: 10
+[13:21:10] [INFO    ]     batch_size: 4
+[13:21:10] [INFO    ]     lr: 0.0001
+[13:21:10] [INFO    ]     weight_decay: 0.0001
+[13:21:10] [INFO    ]     lr_scheduler: cosine
+[13:21:10] [INFO    ]     warmup_epochs: 3
+[13:21:10] [INFO    ]     mixed_precision: bf16
+[13:21:10] [INFO    ]     grad_clip: 1.0
+[13:21:10] [INFO    ]     num_pos_points: 1
+[13:21:10] [INFO    ]     num_neg_points: 1
+[13:21:10] [INFO    ]     max_nuclei_per_image: 0
+[13:21:10] [INFO    ]   evaluation:
+[13:21:10] [INFO    ]     iou_threshold: 0.5
+[13:21:10] [INFO    ]     inference_mode: gt_box
+[13:21:10] [INFO    ]     mask_threshold: 0.5
+[13:21:10] [INFO    ]     min_mask_region_area: 50
+[13:21:10] [INFO    ]     points_per_side: 32
+[13:21:10] [INFO    ]     pred_iou_thresh: 0.75
+[13:21:10] [INFO    ]     stability_score_thresh: 0.85
+[13:21:10] [INFO    ]     box_nms_thresh: 0.7
+[13:21:10] [INFO    ]   output:
+[13:21:10] [INFO    ]     save_dir: outputs/train_a100
+[13:21:10] [INFO    ]     num_vis_samples: 8
+[13:21:10] [INFO    ]   _config_path: configs/train_a100.yaml
+[13:21:10] [INFO    ] ============================================================
+[13:21:10] [INFO    ] Device: cuda
+[13:21:12] [INFO    ] Evaluating 133 validation images.
+[13:21:12] [INFO    ] Inference mode: gt_box
+[13:24:22] [INFO    ] ============================================================
+[13:24:22] [INFO    ] FOLD 0 RESULTS  (133 images)
+[13:24:22] [INFO    ] ============================================================
+[13:24:22] [INFO    ]   Dice : 0.8164
+[13:24:22] [INFO    ]   AJI  : 0.4060
+[13:24:22] [INFO    ]   PQ   : 0.4315
+[13:24:22] [INFO    ]   SQ   : 0.7321
+[13:24:22] [INFO    ]   RQ   : 0.5814
+[13:24:22] [INFO    ] ============================================================
+[13:24:22] [INFO    ] Per-image metrics saved → outputs/train_a100/fold_0/per_image_metrics.json
+[13:24:22] [INFO    ] Fold metrics saved → outputs/train_a100/fold_0/fold_metrics.json
+[13:24:41] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_1/run.log
+[13:24:41] [INFO    ] Log level : INFO
+[13:24:41] [INFO    ] ============================================================
+[13:24:41] [INFO    ] SYSTEM INFO
+[13:24:41] [INFO    ] ============================================================
+[13:24:41] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[13:24:41] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[13:24:41] [INFO    ] PyTorch   : 2.10.0+cu126
+[13:24:41] [INFO    ] CUDA avail: True
+[13:24:41] [INFO    ] GPU count : 1
+[13:24:41] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[13:24:41] [INFO    ] CUDA ver  : 12.6
+[13:24:41] [INFO    ] cuDNN ver : 91002
+[13:24:41] [INFO    ] torchvision: 0.25.0+cu126
+[13:24:41] [INFO    ] timm      : 0.9.16
+[13:24:41] [INFO    ] NumPy     : 2.2.6
+[13:24:41] [INFO    ] ============================================================
+[13:24:41] [INFO    ] ============================================================
+[13:24:41] [INFO    ] CONFIG
+[13:24:41] [INFO    ] ============================================================
+[13:24:41] [INFO    ]   debug:
+[13:24:41] [INFO    ]     enabled: false
+[13:24:41] [INFO    ]     max_samples: null
+[13:24:41] [INFO    ]     log_level: INFO
+[13:24:41] [INFO    ]     log_to_file: true
+[13:24:41] [INFO    ]     save_every_n_epochs: 5
+[13:24:41] [INFO    ]   data:
+[13:24:41] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[13:24:41] [INFO    ]     n_folds: 5
+[13:24:41] [INFO    ]     seed: 42
+[13:24:41] [INFO    ]     image_size: 1024
+[13:24:41] [INFO    ]     num_workers: 4
+[13:24:41] [INFO    ]   model:
+[13:24:41] [INFO    ]     type: mobile_sam
+[13:24:41] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[13:24:41] [INFO    ]     lora_rank: 16
+[13:24:41] [INFO    ]     lora_alpha: 32
+[13:24:41] [INFO    ]     lora_dropout: 0.1
+[13:24:41] [INFO    ]     lora_targets:
+[13:24:41] [INFO    ]     - qkv
+[13:24:41] [INFO    ]   training:
+[13:24:41] [INFO    ]     epochs: 10
+[13:24:41] [INFO    ]     batch_size: 4
+[13:24:41] [INFO    ]     lr: 0.0001
+[13:24:41] [INFO    ]     weight_decay: 0.0001
+[13:24:41] [INFO    ]     lr_scheduler: cosine
+[13:24:41] [INFO    ]     warmup_epochs: 3
+[13:24:41] [INFO    ]     mixed_precision: bf16
+[13:24:41] [INFO    ]     grad_clip: 1.0
+[13:24:41] [INFO    ]     num_pos_points: 1
+[13:24:41] [INFO    ]     num_neg_points: 1
+[13:24:41] [INFO    ]     max_nuclei_per_image: 0
+[13:24:41] [INFO    ]   evaluation:
+[13:24:41] [INFO    ]     iou_threshold: 0.5
+[13:24:41] [INFO    ]     inference_mode: gt_box
+[13:24:41] [INFO    ]     mask_threshold: 0.5
+[13:24:41] [INFO    ]     min_mask_region_area: 50
+[13:24:41] [INFO    ]     points_per_side: 32
+[13:24:41] [INFO    ]     pred_iou_thresh: 0.75
+[13:24:41] [INFO    ]     stability_score_thresh: 0.85
+[13:24:41] [INFO    ]     box_nms_thresh: 0.7
+[13:24:41] [INFO    ]   output:
+[13:24:41] [INFO    ]     save_dir: outputs/train_a100
+[13:24:41] [INFO    ]     num_vis_samples: 8
+[13:24:41] [INFO    ]   _config_path: configs/train_a100.yaml
+[13:24:41] [INFO    ] ============================================================
+[13:24:41] [INFO    ] Device: cuda
+[13:24:41] [INFO    ] Mixed precision: bf16 | GradScaler: False
+[13:24:41] [INFO    ] DataLoaders | train_batches=133 | val_batches=34
+[13:24:42] [INFO    ] Optimizer: AdamW | lr=1.00e-04 | wd=1.00e-04 | trainable_params=4183344
+[13:24:42] [INFO    ] Starting training | fold=1 | epochs=10 | max_nuclei_per_image=all
+[13:36:32] [INFO    ] Epoch   1/10 | loss=0.4351  bce=0.0233  dice_loss=0.4009 | val_loss=0.3713  val_dice=0.6420 | lr=3.33e-05 | 709.9s
+[13:36:34] [INFO    ]   ↑ New best val_dice=0.6420 at epoch 1 — checkpoint saved.
+[13:48:31] [INFO    ] Epoch   2/10 | loss=0.3395  bce=0.0119  dice_loss=0.3234 | val_loss=0.3415  val_dice=0.6699 | lr=6.67e-05 | 717.3s
+[13:48:32] [INFO    ]   ↑ New best val_dice=0.6699 at epoch 2 — checkpoint saved.
+[14:00:27] [INFO    ] Epoch   3/10 | loss=0.3169  bce=0.0108  dice_loss=0.3022 | val_loss=0.3410  val_dice=0.6716 | lr=1.00e-04 | 715.8s
+[14:00:28] [INFO    ]   ↑ New best val_dice=0.6716 at epoch 3 — checkpoint saved.
+[14:12:29] [INFO    ] Epoch   4/10 | loss=0.2977  bce=0.0098  dice_loss=0.2843 | val_loss=0.3050  val_dice=0.7046 | lr=9.50e-05 | 719.9s
+[14:12:30] [INFO    ]   ↑ New best val_dice=0.7046 at epoch 4 — checkpoint saved.
+[14:24:36] [INFO    ] Epoch   5/10 | loss=0.2861  bce=0.0093  dice_loss=0.2733 | val_loss=0.3024  val_dice=0.7069 | lr=8.12e-05 | 725.9s
+[14:24:37] [INFO    ]   ↑ New best val_dice=0.7069 at epoch 5 — checkpoint saved.
+[14:36:52] [INFO    ] Epoch   6/10 | loss=0.2764  bce=0.0088  dice_loss=0.2642 | val_loss=0.2902  val_dice=0.7198 | lr=6.11e-05 | 735.1s
+[14:36:53] [INFO    ]   ↑ New best val_dice=0.7198 at epoch 6 — checkpoint saved.
+[14:48:58] [INFO    ] Epoch   7/10 | loss=0.2716  bce=0.0086  dice_loss=0.2596 | val_loss=0.2968  val_dice=0.7123 | lr=3.89e-05 | 725.3s
+[15:01:05] [INFO    ] Epoch   8/10 | loss=0.2673  bce=0.0085  dice_loss=0.2556 | val_loss=0.2858  val_dice=0.7232 | lr=1.88e-05 | 726.5s
+[15:01:06] [INFO    ]   ↑ New best val_dice=0.7232 at epoch 8 — checkpoint saved.
+[15:13:27] [INFO    ] Epoch   9/10 | loss=0.2639  bce=0.0084  dice_loss=0.2523 | val_loss=0.2824  val_dice=0.7265 | lr=4.95e-06 | 741.2s
+[15:13:28] [INFO    ]   ↑ New best val_dice=0.7265 at epoch 9 — checkpoint saved.
+[15:25:37] [INFO    ] Epoch  10/10 | loss=0.2621  bce=0.0082  dice_loss=0.2507 | val_loss=0.2825  val_dice=0.7264 | lr=0.00e+00 | 728.6s
+[15:25:37] [INFO    ] Training history saved → outputs/train_a100/fold_1/train_history.json
+[15:25:38] [INFO    ] Fold 1 training complete | best_val_dice=0.7265 at epoch 9
+[15:25:38] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_1_eval/run.log
+[15:25:38] [INFO    ] Log level : INFO
+[15:25:38] [INFO    ] ============================================================
+[15:25:38] [INFO    ] SYSTEM INFO
+[15:25:38] [INFO    ] ============================================================
+[15:25:38] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[15:25:38] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[15:25:38] [INFO    ] PyTorch   : 2.10.0+cu126
+[15:25:38] [INFO    ] CUDA avail: True
+[15:25:38] [INFO    ] GPU count : 1
+[15:25:38] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[15:25:38] [INFO    ] CUDA ver  : 12.6
+[15:25:38] [INFO    ] cuDNN ver : 91002
+[15:25:38] [INFO    ] torchvision: 0.25.0+cu126
+[15:25:38] [INFO    ] timm      : 0.9.16
+[15:25:38] [INFO    ] NumPy     : 2.2.6
+[15:25:38] [INFO    ] ============================================================
+[15:25:38] [INFO    ] ============================================================
+[15:25:38] [INFO    ] CONFIG
+[15:25:38] [INFO    ] ============================================================
+[15:25:38] [INFO    ]   debug:
+[15:25:38] [INFO    ]     enabled: false
+[15:25:38] [INFO    ]     max_samples: null
+[15:25:38] [INFO    ]     log_level: INFO
+[15:25:38] [INFO    ]     log_to_file: true
+[15:25:38] [INFO    ]     save_every_n_epochs: 5
+[15:25:38] [INFO    ]   data:
+[15:25:38] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[15:25:38] [INFO    ]     n_folds: 5
+[15:25:38] [INFO    ]     seed: 42
+[15:25:38] [INFO    ]     image_size: 1024
+[15:25:38] [INFO    ]     num_workers: 4
+[15:25:38] [INFO    ]   model:
+[15:25:38] [INFO    ]     type: mobile_sam
+[15:25:38] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[15:25:38] [INFO    ]     lora_rank: 16
+[15:25:38] [INFO    ]     lora_alpha: 32
+[15:25:38] [INFO    ]     lora_dropout: 0.1
+[15:25:38] [INFO    ]     lora_targets:
+[15:25:38] [INFO    ]     - qkv
+[15:25:38] [INFO    ]   training:
+[15:25:38] [INFO    ]     epochs: 10
+[15:25:38] [INFO    ]     batch_size: 4
+[15:25:38] [INFO    ]     lr: 0.0001
+[15:25:38] [INFO    ]     weight_decay: 0.0001
+[15:25:38] [INFO    ]     lr_scheduler: cosine
+[15:25:38] [INFO    ]     warmup_epochs: 3
+[15:25:38] [INFO    ]     mixed_precision: bf16
+[15:25:38] [INFO    ]     grad_clip: 1.0
+[15:25:38] [INFO    ]     num_pos_points: 1
+[15:25:38] [INFO    ]     num_neg_points: 1
+[15:25:38] [INFO    ]     max_nuclei_per_image: 0
+[15:25:38] [INFO    ]   evaluation:
+[15:25:38] [INFO    ]     iou_threshold: 0.5
+[15:25:38] [INFO    ]     inference_mode: gt_box
+[15:25:38] [INFO    ]     mask_threshold: 0.5
+[15:25:38] [INFO    ]     min_mask_region_area: 50
+[15:25:38] [INFO    ]     points_per_side: 32
+[15:25:38] [INFO    ]     pred_iou_thresh: 0.75
+[15:25:38] [INFO    ]     stability_score_thresh: 0.85
+[15:25:38] [INFO    ]     box_nms_thresh: 0.7
+[15:25:38] [INFO    ]   output:
+[15:25:38] [INFO    ]     save_dir: outputs/train_a100
+[15:25:38] [INFO    ]     num_vis_samples: 8
+[15:25:38] [INFO    ]   _config_path: configs/train_a100.yaml
+[15:25:38] [INFO    ] ============================================================
+[15:25:38] [INFO    ] Device: cuda
+[15:25:40] [INFO    ] Evaluating 133 validation images.
+[15:25:40] [INFO    ] Inference mode: gt_box
+[15:28:30] [INFO    ] ============================================================
+[15:28:30] [INFO    ] FOLD 1 RESULTS  (133 images)
+[15:28:30] [INFO    ] ============================================================
+[15:28:30] [INFO    ]   Dice : 0.8291
+[15:28:30] [INFO    ]   AJI  : 0.4534
+[15:28:30] [INFO    ]   PQ   : 0.4554
+[15:28:30] [INFO    ]   SQ   : 0.7268
+[15:28:30] [INFO    ]   RQ   : 0.6225
+[15:28:30] [INFO    ] ============================================================
+[15:28:30] [INFO    ] Per-image metrics saved → outputs/train_a100/fold_1/per_image_metrics.json
+[15:28:30] [INFO    ] Fold metrics saved → outputs/train_a100/fold_1/fold_metrics.json
+[15:28:42] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_2/run.log
+[15:28:42] [INFO    ] Log level : INFO
+[15:28:42] [INFO    ] ============================================================
+[15:28:42] [INFO    ] SYSTEM INFO
+[15:28:42] [INFO    ] ============================================================
+[15:28:42] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[15:28:42] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[15:28:42] [INFO    ] PyTorch   : 2.10.0+cu126
+[15:28:42] [INFO    ] CUDA avail: True
+[15:28:42] [INFO    ] GPU count : 1
+[15:28:42] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[15:28:42] [INFO    ] CUDA ver  : 12.6
+[15:28:42] [INFO    ] cuDNN ver : 91002
+[15:28:42] [INFO    ] torchvision: 0.25.0+cu126
+[15:28:42] [INFO    ] timm      : 0.9.16
+[15:28:42] [INFO    ] NumPy     : 2.2.6
+[15:28:42] [INFO    ] ============================================================
+[15:28:42] [INFO    ] ============================================================
+[15:28:42] [INFO    ] CONFIG
+[15:28:42] [INFO    ] ============================================================
+[15:28:42] [INFO    ]   debug:
+[15:28:42] [INFO    ]     enabled: false
+[15:28:42] [INFO    ]     max_samples: null
+[15:28:42] [INFO    ]     log_level: INFO
+[15:28:42] [INFO    ]     log_to_file: true
+[15:28:42] [INFO    ]     save_every_n_epochs: 5
+[15:28:42] [INFO    ]   data:
+[15:28:42] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[15:28:42] [INFO    ]     n_folds: 5
+[15:28:42] [INFO    ]     seed: 42
+[15:28:42] [INFO    ]     image_size: 1024
+[15:28:42] [INFO    ]     num_workers: 4
+[15:28:42] [INFO    ]   model:
+[15:28:42] [INFO    ]     type: mobile_sam
+[15:28:42] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[15:28:42] [INFO    ]     lora_rank: 16
+[15:28:42] [INFO    ]     lora_alpha: 32
+[15:28:42] [INFO    ]     lora_dropout: 0.1
+[15:28:42] [INFO    ]     lora_targets:
+[15:28:42] [INFO    ]     - qkv
+[15:28:42] [INFO    ]   training:
+[15:28:42] [INFO    ]     epochs: 10
+[15:28:42] [INFO    ]     batch_size: 4
+[15:28:42] [INFO    ]     lr: 0.0001
+[15:28:42] [INFO    ]     weight_decay: 0.0001
+[15:28:42] [INFO    ]     lr_scheduler: cosine
+[15:28:42] [INFO    ]     warmup_epochs: 3
+[15:28:42] [INFO    ]     mixed_precision: bf16
+[15:28:42] [INFO    ]     grad_clip: 1.0
+[15:28:42] [INFO    ]     num_pos_points: 1
+[15:28:42] [INFO    ]     num_neg_points: 1
+[15:28:42] [INFO    ]     max_nuclei_per_image: 0
+[15:28:42] [INFO    ]   evaluation:
+[15:28:42] [INFO    ]     iou_threshold: 0.5
+[15:28:42] [INFO    ]     inference_mode: gt_box
+[15:28:42] [INFO    ]     mask_threshold: 0.5
+[15:28:42] [INFO    ]     min_mask_region_area: 50
+[15:28:42] [INFO    ]     points_per_side: 32
+[15:28:42] [INFO    ]     pred_iou_thresh: 0.75
+[15:28:42] [INFO    ]     stability_score_thresh: 0.85
+[15:28:42] [INFO    ]     box_nms_thresh: 0.7
+[15:28:42] [INFO    ]   output:
+[15:28:42] [INFO    ]     save_dir: outputs/train_a100
+[15:28:42] [INFO    ]     num_vis_samples: 8
+[15:28:42] [INFO    ]   _config_path: configs/train_a100.yaml
+[15:28:42] [INFO    ] ============================================================
+[15:28:42] [INFO    ] Device: cuda
+[15:28:42] [INFO    ] Mixed precision: bf16 | GradScaler: False
+[15:28:42] [INFO    ] DataLoaders | train_batches=133 | val_batches=34
+[15:28:43] [INFO    ] Optimizer: AdamW | lr=1.00e-04 | wd=1.00e-04 | trainable_params=4183344
+[15:28:43] [INFO    ] Starting training | fold=2 | epochs=10 | max_nuclei_per_image=all
+[15:41:20] [INFO    ] Epoch   1/10 | loss=0.4367  bce=0.0246  dice_loss=0.4011 | val_loss=0.3964  val_dice=0.6188 | lr=3.33e-05 | 757.5s
+[15:41:21] [INFO    ]   ↑ New best val_dice=0.6188 at epoch 1 — checkpoint saved.
+[15:53:55] [INFO    ] Epoch   2/10 | loss=0.3364  bce=0.0120  dice_loss=0.3203 | val_loss=0.3388  val_dice=0.6726 | lr=6.67e-05 | 753.6s
+[15:53:55] [INFO    ]   ↑ New best val_dice=0.6726 at epoch 2 — checkpoint saved.
+[16:06:29] [INFO    ] Epoch   3/10 | loss=0.3144  bce=0.0106  dice_loss=0.2999 | val_loss=0.3221  val_dice=0.6881 | lr=1.00e-04 | 753.6s
+[16:06:30] [INFO    ]   ↑ New best val_dice=0.6881 at epoch 3 — checkpoint saved.
+[16:19:09] [INFO    ] Epoch   4/10 | loss=0.2991  bce=0.0099  dice_loss=0.2856 | val_loss=0.3051  val_dice=0.7046 | lr=9.50e-05 | 759.1s
+[16:19:11] [INFO    ]   ↑ New best val_dice=0.7046 at epoch 4 — checkpoint saved.
+[16:31:38] [INFO    ] Epoch   5/10 | loss=0.2858  bce=0.0093  dice_loss=0.2731 | val_loss=0.3033  val_dice=0.7069 | lr=8.12e-05 | 746.9s
+[16:31:38] [INFO    ]   ↑ New best val_dice=0.7069 at epoch 5 — checkpoint saved.
+[16:44:10] [INFO    ] Epoch   6/10 | loss=0.2770  bce=0.0089  dice_loss=0.2647 | val_loss=0.2887  val_dice=0.7194 | lr=6.11e-05 | 751.9s
+[16:44:10] [INFO    ]   ↑ New best val_dice=0.7194 at epoch 6 — checkpoint saved.
+[16:56:35] [INFO    ] Epoch   7/10 | loss=0.2699  bce=0.0085  dice_loss=0.2581 | val_loss=0.2871  val_dice=0.7217 | lr=3.89e-05 | 744.4s
+[16:56:36] [INFO    ]   ↑ New best val_dice=0.7217 at epoch 7 — checkpoint saved.
+[17:09:10] [INFO    ] Epoch   8/10 | loss=0.2664  bce=0.0085  dice_loss=0.2547 | val_loss=0.2888  val_dice=0.7202 | lr=1.88e-05 | 753.4s
+[17:21:42] [INFO    ] Epoch   9/10 | loss=0.2630  bce=0.0081  dice_loss=0.2517 | val_loss=0.2839  val_dice=0.7249 | lr=4.95e-06 | 751.0s
+[17:21:45] [INFO    ]   ↑ New best val_dice=0.7249 at epoch 9 — checkpoint saved.
+[17:34:21] [INFO    ] Epoch  10/10 | loss=0.2623  bce=0.0082  dice_loss=0.2509 | val_loss=0.2827  val_dice=0.7260 | lr=0.00e+00 | 756.1s
+[17:34:22] [INFO    ]   ↑ New best val_dice=0.7260 at epoch 10 — checkpoint saved.
+[17:34:22] [INFO    ] Training history saved → outputs/train_a100/fold_2/train_history.json
+[17:34:22] [INFO    ] Fold 2 training complete | best_val_dice=0.7260 at epoch 10
+[17:34:23] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_2_eval/run.log
+[17:34:23] [INFO    ] Log level : INFO
+[17:34:23] [INFO    ] ============================================================
+[17:34:23] [INFO    ] SYSTEM INFO
+[17:34:23] [INFO    ] ============================================================
+[17:34:23] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[17:34:23] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[17:34:23] [INFO    ] PyTorch   : 2.10.0+cu126
+[17:34:23] [INFO    ] CUDA avail: True
+[17:34:23] [INFO    ] GPU count : 1
+[17:34:23] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[17:34:23] [INFO    ] CUDA ver  : 12.6
+[17:34:23] [INFO    ] cuDNN ver : 91002
+[17:34:23] [INFO    ] torchvision: 0.25.0+cu126
+[17:34:23] [INFO    ] timm      : 0.9.16
+[17:34:23] [INFO    ] NumPy     : 2.2.6
+[17:34:23] [INFO    ] ============================================================
+[17:34:23] [INFO    ] ============================================================
+[17:34:23] [INFO    ] CONFIG
+[17:34:23] [INFO    ] ============================================================
+[17:34:23] [INFO    ]   debug:
+[17:34:23] [INFO    ]     enabled: false
+[17:34:23] [INFO    ]     max_samples: null
+[17:34:23] [INFO    ]     log_level: INFO
+[17:34:23] [INFO    ]     log_to_file: true
+[17:34:23] [INFO    ]     save_every_n_epochs: 5
+[17:34:23] [INFO    ]   data:
+[17:34:23] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[17:34:23] [INFO    ]     n_folds: 5
+[17:34:23] [INFO    ]     seed: 42
+[17:34:23] [INFO    ]     image_size: 1024
+[17:34:23] [INFO    ]     num_workers: 4
+[17:34:23] [INFO    ]   model:
+[17:34:23] [INFO    ]     type: mobile_sam
+[17:34:23] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[17:34:23] [INFO    ]     lora_rank: 16
+[17:34:23] [INFO    ]     lora_alpha: 32
+[17:34:23] [INFO    ]     lora_dropout: 0.1
+[17:34:23] [INFO    ]     lora_targets:
+[17:34:23] [INFO    ]     - qkv
+[17:34:23] [INFO    ]   training:
+[17:34:23] [INFO    ]     epochs: 10
+[17:34:23] [INFO    ]     batch_size: 4
+[17:34:23] [INFO    ]     lr: 0.0001
+[17:34:23] [INFO    ]     weight_decay: 0.0001
+[17:34:23] [INFO    ]     lr_scheduler: cosine
+[17:34:23] [INFO    ]     warmup_epochs: 3
+[17:34:23] [INFO    ]     mixed_precision: bf16
+[17:34:23] [INFO    ]     grad_clip: 1.0
+[17:34:23] [INFO    ]     num_pos_points: 1
+[17:34:23] [INFO    ]     num_neg_points: 1
+[17:34:23] [INFO    ]     max_nuclei_per_image: 0
+[17:34:23] [INFO    ]   evaluation:
+[17:34:23] [INFO    ]     iou_threshold: 0.5
+[17:34:23] [INFO    ]     inference_mode: gt_box
+[17:34:23] [INFO    ]     mask_threshold: 0.5
+[17:34:23] [INFO    ]     min_mask_region_area: 50
+[17:34:23] [INFO    ]     points_per_side: 32
+[17:34:23] [INFO    ]     pred_iou_thresh: 0.75
+[17:34:23] [INFO    ]     stability_score_thresh: 0.85
+[17:34:23] [INFO    ]     box_nms_thresh: 0.7
+[17:34:23] [INFO    ]   output:
+[17:34:23] [INFO    ]     save_dir: outputs/train_a100
+[17:34:23] [INFO    ]     num_vis_samples: 8
+[17:34:23] [INFO    ]   _config_path: configs/train_a100.yaml
+[17:34:23] [INFO    ] ============================================================
+[17:34:23] [INFO    ] Device: cuda
+[17:34:26] [INFO    ] Evaluating 133 validation images.
+[17:34:26] [INFO    ] Inference mode: gt_box
+[17:36:45] [INFO    ] ============================================================
+[17:36:45] [INFO    ] FOLD 2 RESULTS  (133 images)
+[17:36:45] [INFO    ] ============================================================
+[17:36:45] [INFO    ]   Dice : 0.8053
+[17:36:45] [INFO    ]   AJI  : 0.4631
+[17:36:45] [INFO    ]   PQ   : 0.4806
+[17:36:45] [INFO    ]   SQ   : 0.7316
+[17:36:45] [INFO    ]   RQ   : 0.6526
+[17:36:45] [INFO    ] ============================================================
+[17:36:45] [INFO    ] Per-image metrics saved → outputs/train_a100/fold_2/per_image_metrics.json
+[17:36:45] [INFO    ] Fold metrics saved → outputs/train_a100/fold_2/fold_metrics.json
+[17:36:57] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_3/run.log
+[17:36:57] [INFO    ] Log level : INFO
+[17:36:57] [INFO    ] ============================================================
+[17:36:57] [INFO    ] SYSTEM INFO
+[17:36:57] [INFO    ] ============================================================
+[17:36:57] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[17:36:57] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[17:36:57] [INFO    ] PyTorch   : 2.10.0+cu126
+[17:36:57] [INFO    ] CUDA avail: True
+[17:36:57] [INFO    ] GPU count : 1
+[17:36:57] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[17:36:57] [INFO    ] CUDA ver  : 12.6
+[17:36:57] [INFO    ] cuDNN ver : 91002
+[17:36:57] [INFO    ] torchvision: 0.25.0+cu126
+[17:36:57] [INFO    ] timm      : 0.9.16
+[17:36:57] [INFO    ] NumPy     : 2.2.6
+[17:36:57] [INFO    ] ============================================================
+[17:36:57] [INFO    ] ============================================================
+[17:36:57] [INFO    ] CONFIG
+[17:36:57] [INFO    ] ============================================================
+[17:36:57] [INFO    ]   debug:
+[17:36:57] [INFO    ]     enabled: false
+[17:36:57] [INFO    ]     max_samples: null
+[17:36:57] [INFO    ]     log_level: INFO
+[17:36:57] [INFO    ]     log_to_file: true
+[17:36:57] [INFO    ]     save_every_n_epochs: 5
+[17:36:57] [INFO    ]   data:
+[17:36:57] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[17:36:57] [INFO    ]     n_folds: 5
+[17:36:57] [INFO    ]     seed: 42
+[17:36:57] [INFO    ]     image_size: 1024
+[17:36:57] [INFO    ]     num_workers: 4
+[17:36:57] [INFO    ]   model:
+[17:36:57] [INFO    ]     type: mobile_sam
+[17:36:57] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[17:36:57] [INFO    ]     lora_rank: 16
+[17:36:57] [INFO    ]     lora_alpha: 32
+[17:36:57] [INFO    ]     lora_dropout: 0.1
+[17:36:57] [INFO    ]     lora_targets:
+[17:36:57] [INFO    ]     - qkv
+[17:36:57] [INFO    ]   training:
+[17:36:57] [INFO    ]     epochs: 10
+[17:36:57] [INFO    ]     batch_size: 4
+[17:36:57] [INFO    ]     lr: 0.0001
+[17:36:57] [INFO    ]     weight_decay: 0.0001
+[17:36:57] [INFO    ]     lr_scheduler: cosine
+[17:36:57] [INFO    ]     warmup_epochs: 3
+[17:36:57] [INFO    ]     mixed_precision: bf16
+[17:36:57] [INFO    ]     grad_clip: 1.0
+[17:36:57] [INFO    ]     num_pos_points: 1
+[17:36:57] [INFO    ]     num_neg_points: 1
+[17:36:57] [INFO    ]     max_nuclei_per_image: 0
+[17:36:57] [INFO    ]   evaluation:
+[17:36:57] [INFO    ]     iou_threshold: 0.5
+[17:36:57] [INFO    ]     inference_mode: gt_box
+[17:36:57] [INFO    ]     mask_threshold: 0.5
+[17:36:57] [INFO    ]     min_mask_region_area: 50
+[17:36:57] [INFO    ]     points_per_side: 32
+[17:36:57] [INFO    ]     pred_iou_thresh: 0.75
+[17:36:57] [INFO    ]     stability_score_thresh: 0.85
+[17:36:57] [INFO    ]     box_nms_thresh: 0.7
+[17:36:57] [INFO    ]   output:
+[17:36:57] [INFO    ]     save_dir: outputs/train_a100
+[17:36:57] [INFO    ]     num_vis_samples: 8
+[17:36:57] [INFO    ]   _config_path: configs/train_a100.yaml
+[17:36:57] [INFO    ] ============================================================
+[17:36:57] [INFO    ] Device: cuda
+[17:36:57] [INFO    ] Mixed precision: bf16 | GradScaler: False
+[17:36:57] [INFO    ] DataLoaders | train_batches=133 | val_batches=34
+[17:36:57] [INFO    ] Optimizer: AdamW | lr=1.00e-04 | wd=1.00e-04 | trainable_params=4183344
+[17:36:57] [INFO    ] Starting training | fold=3 | epochs=10 | max_nuclei_per_image=all
+[17:49:02] [INFO    ] Epoch   1/10 | loss=0.4329  bce=0.0239  dice_loss=0.3983 | val_loss=0.3735  val_dice=0.6402 | lr=3.33e-05 | 724.8s
+[17:49:03] [INFO    ]   ↑ New best val_dice=0.6402 at epoch 1 — checkpoint saved.
+[18:01:12] [INFO    ] Epoch   2/10 | loss=0.3361  bce=0.0120  dice_loss=0.3199 | val_loss=0.3346  val_dice=0.6754 | lr=6.67e-05 | 729.6s
+[18:01:13] [INFO    ]   ↑ New best val_dice=0.6754 at epoch 2 — checkpoint saved.
+[18:13:17] [INFO    ] Epoch   3/10 | loss=0.3111  bce=0.0108  dice_loss=0.2963 | val_loss=0.3246  val_dice=0.6846 | lr=1.00e-04 | 724.6s
+[18:13:18] [INFO    ]   ↑ New best val_dice=0.6846 at epoch 3 — checkpoint saved.
+[18:25:22] [INFO    ] Epoch   4/10 | loss=0.2943  bce=0.0097  dice_loss=0.2810 | val_loss=0.3085  val_dice=0.7009 | lr=9.50e-05 | 723.8s
+[18:25:23] [INFO    ]   ↑ New best val_dice=0.7009 at epoch 4 — checkpoint saved.
+[18:37:34] [INFO    ] Epoch   5/10 | loss=0.2823  bce=0.0092  dice_loss=0.2697 | val_loss=0.2948  val_dice=0.7145 | lr=8.12e-05 | 730.9s
+[18:37:35] [INFO    ]   ↑ New best val_dice=0.7145 at epoch 5 — checkpoint saved.
+[18:49:24] [INFO    ] Epoch   6/10 | loss=0.2753  bce=0.0090  dice_loss=0.2630 | val_loss=0.2874  val_dice=0.7208 | lr=6.11e-05 | 708.9s
+[18:49:24] [INFO    ]   ↑ New best val_dice=0.7208 at epoch 6 — checkpoint saved.
+[19:01:28] [INFO    ] Epoch   7/10 | loss=0.2690  bce=0.0086  dice_loss=0.2571 | val_loss=0.2811  val_dice=0.7278 | lr=3.89e-05 | 724.7s
+[19:01:30] [INFO    ]   ↑ New best val_dice=0.7278 at epoch 7 — checkpoint saved.
+[19:13:21] [INFO    ] Epoch   8/10 | loss=0.2634  bce=0.0084  dice_loss=0.2517 | val_loss=0.2820  val_dice=0.7263 | lr=1.88e-05 | 711.1s
+[19:25:33] [INFO    ] Epoch   9/10 | loss=0.2609  bce=0.0082  dice_loss=0.2495 | val_loss=0.2748  val_dice=0.7336 | lr=4.95e-06 | 732.0s
+[19:25:34] [INFO    ]   ↑ New best val_dice=0.7336 at epoch 9 — checkpoint saved.
+[19:37:32] [INFO    ] Epoch  10/10 | loss=0.2593  bce=0.0082  dice_loss=0.2479 | val_loss=0.2752  val_dice=0.7331 | lr=0.00e+00 | 717.7s
+[19:37:32] [INFO    ] Training history saved → outputs/train_a100/fold_3/train_history.json
+[19:37:32] [INFO    ] Fold 3 training complete | best_val_dice=0.7336 at epoch 9
+[19:37:34] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_3_eval/run.log
+[19:37:34] [INFO    ] Log level : INFO
+[19:37:34] [INFO    ] ============================================================
+[19:37:34] [INFO    ] SYSTEM INFO
+[19:37:34] [INFO    ] ============================================================
+[19:37:34] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[19:37:34] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[19:37:34] [INFO    ] PyTorch   : 2.10.0+cu126
+[19:37:34] [INFO    ] CUDA avail: True
+[19:37:34] [INFO    ] GPU count : 1
+[19:37:34] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[19:37:34] [INFO    ] CUDA ver  : 12.6
+[19:37:34] [INFO    ] cuDNN ver : 91002
+[19:37:34] [INFO    ] torchvision: 0.25.0+cu126
+[19:37:34] [INFO    ] timm      : 0.9.16
+[19:37:34] [INFO    ] NumPy     : 2.2.6
+[19:37:34] [INFO    ] ============================================================
+[19:37:35] [INFO    ] ============================================================
+[19:37:35] [INFO    ] CONFIG
+[19:37:35] [INFO    ] ============================================================
+[19:37:35] [INFO    ]   debug:
+[19:37:35] [INFO    ]     enabled: false
+[19:37:35] [INFO    ]     max_samples: null
+[19:37:35] [INFO    ]     log_level: INFO
+[19:37:35] [INFO    ]     log_to_file: true
+[19:37:35] [INFO    ]     save_every_n_epochs: 5
+[19:37:35] [INFO    ]   data:
+[19:37:35] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[19:37:35] [INFO    ]     n_folds: 5
+[19:37:35] [INFO    ]     seed: 42
+[19:37:35] [INFO    ]     image_size: 1024
+[19:37:35] [INFO    ]     num_workers: 4
+[19:37:35] [INFO    ]   model:
+[19:37:35] [INFO    ]     type: mobile_sam
+[19:37:35] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[19:37:35] [INFO    ]     lora_rank: 16
+[19:37:35] [INFO    ]     lora_alpha: 32
+[19:37:35] [INFO    ]     lora_dropout: 0.1
+[19:37:35] [INFO    ]     lora_targets:
+[19:37:35] [INFO    ]     - qkv
+[19:37:35] [INFO    ]   training:
+[19:37:35] [INFO    ]     epochs: 10
+[19:37:35] [INFO    ]     batch_size: 4
+[19:37:35] [INFO    ]     lr: 0.0001
+[19:37:35] [INFO    ]     weight_decay: 0.0001
+[19:37:35] [INFO    ]     lr_scheduler: cosine
+[19:37:35] [INFO    ]     warmup_epochs: 3
+[19:37:35] [INFO    ]     mixed_precision: bf16
+[19:37:35] [INFO    ]     grad_clip: 1.0
+[19:37:35] [INFO    ]     num_pos_points: 1
+[19:37:35] [INFO    ]     num_neg_points: 1
+[19:37:35] [INFO    ]     max_nuclei_per_image: 0
+[19:37:35] [INFO    ]   evaluation:
+[19:37:35] [INFO    ]     iou_threshold: 0.5
+[19:37:35] [INFO    ]     inference_mode: gt_box
+[19:37:35] [INFO    ]     mask_threshold: 0.5
+[19:37:35] [INFO    ]     min_mask_region_area: 50
+[19:37:35] [INFO    ]     points_per_side: 32
+[19:37:35] [INFO    ]     pred_iou_thresh: 0.75
+[19:37:35] [INFO    ]     stability_score_thresh: 0.85
+[19:37:35] [INFO    ]     box_nms_thresh: 0.7
+[19:37:35] [INFO    ]   output:
+[19:37:35] [INFO    ]     save_dir: outputs/train_a100
+[19:37:35] [INFO    ]     num_vis_samples: 8
+[19:37:35] [INFO    ]   _config_path: configs/train_a100.yaml
+[19:37:35] [INFO    ] ============================================================
+[19:37:35] [INFO    ] Device: cuda
+[19:37:36] [INFO    ] Evaluating 133 validation images.
+[19:37:36] [INFO    ] Inference mode: gt_box
+[19:39:33] [INFO    ] ============================================================
+[19:39:33] [INFO    ] FOLD 3 RESULTS  (133 images)
+[19:39:33] [INFO    ] ============================================================
+[19:39:33] [INFO    ]   Dice : 0.7902
+[19:39:33] [INFO    ]   AJI  : 0.4532
+[19:39:33] [INFO    ]   PQ   : 0.4833
+[19:39:33] [INFO    ]   SQ   : 0.7305
+[19:39:33] [INFO    ]   RQ   : 0.6589
+[19:39:33] [INFO    ] ============================================================
+[19:39:33] [INFO    ] Per-image metrics saved → outputs/train_a100/fold_3/per_image_metrics.json
+[19:39:33] [INFO    ] Fold metrics saved → outputs/train_a100/fold_3/fold_metrics.json
+[19:39:44] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_4/run.log
+[19:39:44] [INFO    ] Log level : INFO
+[19:39:44] [INFO    ] ============================================================
+[19:39:44] [INFO    ] SYSTEM INFO
+[19:39:44] [INFO    ] ============================================================
+[19:39:44] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[19:39:44] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[19:39:44] [INFO    ] PyTorch   : 2.10.0+cu126
+[19:39:44] [INFO    ] CUDA avail: True
+[19:39:44] [INFO    ] GPU count : 1
+[19:39:44] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[19:39:44] [INFO    ] CUDA ver  : 12.6
+[19:39:44] [INFO    ] cuDNN ver : 91002
+[19:39:44] [INFO    ] torchvision: 0.25.0+cu126
+[19:39:44] [INFO    ] timm      : 0.9.16
+[19:39:44] [INFO    ] NumPy     : 2.2.6
+[19:39:44] [INFO    ] ============================================================
+[19:39:44] [INFO    ] ============================================================
+[19:39:44] [INFO    ] CONFIG
+[19:39:44] [INFO    ] ============================================================
+[19:39:44] [INFO    ]   debug:
+[19:39:44] [INFO    ]     enabled: false
+[19:39:44] [INFO    ]     max_samples: null
+[19:39:44] [INFO    ]     log_level: INFO
+[19:39:44] [INFO    ]     log_to_file: true
+[19:39:44] [INFO    ]     save_every_n_epochs: 5
+[19:39:44] [INFO    ]   data:
+[19:39:44] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[19:39:44] [INFO    ]     n_folds: 5
+[19:39:44] [INFO    ]     seed: 42
+[19:39:44] [INFO    ]     image_size: 1024
+[19:39:44] [INFO    ]     num_workers: 4
+[19:39:44] [INFO    ]   model:
+[19:39:44] [INFO    ]     type: mobile_sam
+[19:39:44] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[19:39:44] [INFO    ]     lora_rank: 16
+[19:39:44] [INFO    ]     lora_alpha: 32
+[19:39:44] [INFO    ]     lora_dropout: 0.1
+[19:39:44] [INFO    ]     lora_targets:
+[19:39:44] [INFO    ]     - qkv
+[19:39:44] [INFO    ]   training:
+[19:39:44] [INFO    ]     epochs: 10
+[19:39:44] [INFO    ]     batch_size: 4
+[19:39:44] [INFO    ]     lr: 0.0001
+[19:39:44] [INFO    ]     weight_decay: 0.0001
+[19:39:44] [INFO    ]     lr_scheduler: cosine
+[19:39:44] [INFO    ]     warmup_epochs: 3
+[19:39:44] [INFO    ]     mixed_precision: bf16
+[19:39:44] [INFO    ]     grad_clip: 1.0
+[19:39:44] [INFO    ]     num_pos_points: 1
+[19:39:44] [INFO    ]     num_neg_points: 1
+[19:39:44] [INFO    ]     max_nuclei_per_image: 0
+[19:39:44] [INFO    ]   evaluation:
+[19:39:44] [INFO    ]     iou_threshold: 0.5
+[19:39:44] [INFO    ]     inference_mode: gt_box
+[19:39:44] [INFO    ]     mask_threshold: 0.5
+[19:39:44] [INFO    ]     min_mask_region_area: 50
+[19:39:44] [INFO    ]     points_per_side: 32
+[19:39:44] [INFO    ]     pred_iou_thresh: 0.75
+[19:39:44] [INFO    ]     stability_score_thresh: 0.85
+[19:39:44] [INFO    ]     box_nms_thresh: 0.7
+[19:39:44] [INFO    ]   output:
+[19:39:44] [INFO    ]     save_dir: outputs/train_a100
+[19:39:44] [INFO    ]     num_vis_samples: 8
+[19:39:44] [INFO    ]   _config_path: configs/train_a100.yaml
+[19:39:44] [INFO    ] ============================================================
+[19:39:44] [INFO    ] Device: cuda
+[19:39:44] [INFO    ] Mixed precision: bf16 | GradScaler: False
+[19:39:44] [INFO    ] DataLoaders | train_batches=133 | val_batches=34
+[19:39:45] [INFO    ] Optimizer: AdamW | lr=1.00e-04 | wd=1.00e-04 | trainable_params=4183344
+[19:39:45] [INFO    ] Starting training | fold=4 | epochs=10 | max_nuclei_per_image=all
+[19:51:27] [INFO    ] Epoch   1/10 | loss=0.4338  bce=0.0243  dice_loss=0.3984 | val_loss=0.3710  val_dice=0.6440 | lr=3.33e-05 | 702.0s
+[19:51:27] [INFO    ]   ↑ New best val_dice=0.6440 at epoch 1 — checkpoint saved.
+[20:02:59] [INFO    ] Epoch   2/10 | loss=0.3339  bce=0.0117  dice_loss=0.3180 | val_loss=0.3268  val_dice=0.6847 | lr=6.67e-05 | 691.7s
+[20:03:00] [INFO    ]   ↑ New best val_dice=0.6847 at epoch 2 — checkpoint saved.
+[20:14:36] [INFO    ] Epoch   3/10 | loss=0.3113  bce=0.0106  dice_loss=0.2968 | val_loss=0.3190  val_dice=0.6914 | lr=1.00e-04 | 696.7s
+[20:14:37] [INFO    ]   ↑ New best val_dice=0.6914 at epoch 3 — checkpoint saved.
+[20:25:49] [INFO    ] Epoch   4/10 | loss=0.2941  bce=0.0097  dice_loss=0.2808 | val_loss=0.2975  val_dice=0.7118 | lr=9.50e-05 | 672.1s
+[20:25:50] [INFO    ]   ↑ New best val_dice=0.7118 at epoch 4 — checkpoint saved.
+[20:36:49] [INFO    ] Epoch   5/10 | loss=0.2824  bce=0.0091  dice_loss=0.2699 | val_loss=0.2900  val_dice=0.7195 | lr=8.12e-05 | 659.4s
+[20:36:50] [INFO    ]   ↑ New best val_dice=0.7195 at epoch 5 — checkpoint saved.
+[20:48:01] [INFO    ] Epoch   6/10 | loss=0.2752  bce=0.0088  dice_loss=0.2631 | val_loss=0.2766  val_dice=0.7320 | lr=6.11e-05 | 671.2s
+[20:48:02] [INFO    ]   ↑ New best val_dice=0.7320 at epoch 6 — checkpoint saved.
+[20:59:10] [INFO    ] Epoch   7/10 | loss=0.2669  bce=0.0086  dice_loss=0.2550 | val_loss=0.2719  val_dice=0.7364 | lr=3.89e-05 | 668.1s
+[20:59:10] [INFO    ]   ↑ New best val_dice=0.7364 at epoch 7 — checkpoint saved.
+[21:10:12] [INFO    ] Epoch   8/10 | loss=0.2633  bce=0.0083  dice_loss=0.2517 | val_loss=0.2667  val_dice=0.7413 | lr=1.88e-05 | 661.7s
+[21:10:13] [INFO    ]   ↑ New best val_dice=0.7413 at epoch 8 — checkpoint saved.
+[21:21:20] [INFO    ] Epoch   9/10 | loss=0.2604  bce=0.0082  dice_loss=0.2489 | val_loss=0.2722  val_dice=0.7359 | lr=4.95e-06 | 667.1s
+[21:32:19] [INFO    ] Epoch  10/10 | loss=0.2581  bce=0.0081  dice_loss=0.2468 | val_loss=0.2698  val_dice=0.7385 | lr=0.00e+00 | 658.2s
+[21:32:21] [INFO    ] Training history saved → outputs/train_a100/fold_4/train_history.json
+[21:32:21] [INFO    ] Fold 4 training complete | best_val_dice=0.7413 at epoch 8
+[21:32:21] [INFO    ] Log file  : /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/outputs/train_a100/fold_4_eval/run.log
+[21:32:21] [INFO    ] Log level : INFO
+[21:32:21] [INFO    ] ============================================================
+[21:32:21] [INFO    ] SYSTEM INFO
+[21:32:21] [INFO    ] ============================================================
+[21:32:21] [INFO    ] Python    : 3.10.19 (main, Oct 21 2025, 16:43:05) [GCC 11.2.0]
+[21:32:21] [INFO    ] Platform  : Linux-4.18.0-425.3.1.el8.x86_64-x86_64-with-glibc2.28
+[21:32:21] [INFO    ] PyTorch   : 2.10.0+cu126
+[21:32:21] [INFO    ] CUDA avail: True
+[21:32:21] [INFO    ] GPU count : 1
+[21:32:21] [INFO    ] GPU[0]    : NVIDIA H100 PCIe  |  79.2 GB VRAM  |  CUDA cap 9.0
+[21:32:21] [INFO    ] CUDA ver  : 12.6
+[21:32:21] [INFO    ] cuDNN ver : 91002
+[21:32:21] [INFO    ] torchvision: 0.25.0+cu126
+[21:32:21] [INFO    ] timm      : 0.9.16
+[21:32:21] [INFO    ] NumPy     : 2.2.6
+[21:32:21] [INFO    ] ============================================================
+[21:32:21] [INFO    ] ============================================================
+[21:32:21] [INFO    ] CONFIG
+[21:32:21] [INFO    ] ============================================================
+[21:32:21] [INFO    ]   debug:
+[21:32:21] [INFO    ]     enabled: false
+[21:32:21] [INFO    ]     max_samples: null
+[21:32:21] [INFO    ]     log_level: INFO
+[21:32:21] [INFO    ]     log_to_file: true
+[21:32:21] [INFO    ]     save_every_n_epochs: 5
+[21:32:21] [INFO    ]   data:
+[21:32:21] [INFO    ]     root: /lustre/fs1/home/de807845/med_img_computing/datasets/NuInsSeg
+[21:32:21] [INFO    ]     n_folds: 5
+[21:32:21] [INFO    ]     seed: 42
+[21:32:21] [INFO    ]     image_size: 1024
+[21:32:21] [INFO    ]     num_workers: 4
+[21:32:21] [INFO    ]   model:
+[21:32:21] [INFO    ]     type: mobile_sam
+[21:32:21] [INFO    ]     checkpoint: /lustre/fs1/home/de807845/med_img_computing/Nuclei-Instance-Segmentation/weights/mobile_sam.pt
+[21:32:21] [INFO    ]     lora_rank: 16
+[21:32:21] [INFO    ]     lora_alpha: 32
+[21:32:21] [INFO    ]     lora_dropout: 0.1
+[21:32:21] [INFO    ]     lora_targets:
+[21:32:21] [INFO    ]     - qkv
+[21:32:21] [INFO    ]   training:
+[21:32:21] [INFO    ]     epochs: 10
+[21:32:21] [INFO    ]     batch_size: 4
+[21:32:21] [INFO    ]     lr: 0.0001
+[21:32:21] [INFO    ]     weight_decay: 0.0001
+[21:32:21] [INFO    ]     lr_scheduler: cosine
+[21:32:21] [INFO    ]     warmup_epochs: 3
+[21:32:21] [INFO    ]     mixed_precision: bf16
+[21:32:21] [INFO    ]     grad_clip: 1.0
+[21:32:21] [INFO    ]     num_pos_points: 1
+[21:32:21] [INFO    ]     num_neg_points: 1
+[21:32:21] [INFO    ]     max_nuclei_per_image: 0
+[21:32:21] [INFO    ]   evaluation:
+[21:32:21] [INFO    ]     iou_threshold: 0.5
+[21:32:21] [INFO    ]     inference_mode: gt_box
+[21:32:21] [INFO    ]     mask_threshold: 0.5
+[21:32:21] [INFO    ]     min_mask_region_area: 50
+[21:32:21] [INFO    ]     points_per_side: 32
+[21:32:21] [INFO    ]     pred_iou_thresh: 0.75
+[21:32:21] [INFO    ]     stability_score_thresh: 0.85
+[21:32:21] [INFO    ]     box_nms_thresh: 0.7
+[21:32:21] [INFO    ]   output:
+[21:32:21] [INFO    ]     save_dir: outputs/train_a100
+[21:32:21] [INFO    ]     num_vis_samples: 8
+[21:32:21] [INFO    ]   _config_path: configs/train_a100.yaml
+[21:32:21] [INFO    ] ============================================================
+[21:32:21] [INFO    ] Device: cuda
+[21:32:23] [INFO    ] Evaluating 133 validation images.
+[21:32:23] [INFO    ] Inference mode: gt_box
+[21:35:00] [INFO    ] ============================================================
+[21:35:00] [INFO    ] FOLD 4 RESULTS  (133 images)
+[21:35:00] [INFO    ] ============================================================
+[21:35:00] [INFO    ]   Dice : 0.8039
+[21:35:00] [INFO    ]   AJI  : 0.4566
+[21:35:00] [INFO    ]   PQ   : 0.4831
+[21:35:00] [INFO    ]   SQ   : 0.7304
+[21:35:00] [INFO    ]   RQ   : 0.6580
+[21:35:00] [INFO    ] ============================================================
+[21:35:00] [INFO    ] Per-image metrics saved → outputs/train_a100/fold_4/per_image_metrics.json
+[21:35:00] [INFO    ] Fold metrics saved → outputs/train_a100/fold_4/fold_metrics.json
+Virtual environment deactivated
+run completed!
