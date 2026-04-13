@@ -2,8 +2,6 @@
 
 Parameter-efficient fine-tuning of [MobileSAM](https://github.com/ChaoningZhang/MobileSAM) with [LoRA](https://arxiv.org/abs/2106.09685) for nuclei instance segmentation on the [NuInsSeg](https://arxiv.org/abs/2308.01760) dataset.
 
-**CAP 5516 — Medical Image Computing (Spring 2026)**
-
 ---
 
 ## Overview
